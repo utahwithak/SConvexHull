@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		8F1BDDF32011850C0021D8C1 /* Random.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1BDDF22011850C0021D8C1 /* Random.swift */; };
 		8F1BDDF7201232440021D8C1 /* Array+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1BDDF6201232440021D8C1 /* Array+Additions.swift */; };
+		8F1BDE222012B34E0021D8C1 /* Vector3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1BDE212012B34E0021D8C1 /* Vector3.swift */; };
 		8F4C938E20110E7800E544AD /* ConvexHull.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4C938420110E7800E544AD /* ConvexHull.framework */; };
 		8F4C939320110E7800E544AD /* ConvexHullTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C939220110E7800E544AD /* ConvexHullTests.swift */; };
 		8F4C939520110E7800E544AD /* ConvexHull.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F4C938720110E7800E544AD /* ConvexHull.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -36,6 +37,7 @@
 /* Begin PBXFileReference section */
 		8F1BDDF22011850C0021D8C1 /* Random.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Random.swift; sourceTree = "<group>"; };
 		8F1BDDF6201232440021D8C1 /* Array+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Additions.swift"; sourceTree = "<group>"; };
+		8F1BDE212012B34E0021D8C1 /* Vector3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Vector3.swift; sourceTree = "<group>"; };
 		8F4C938420110E7800E544AD /* ConvexHull.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConvexHull.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F4C938720110E7800E544AD /* ConvexHull.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConvexHull.h; sourceTree = "<group>"; };
 		8F4C938820110E7800E544AD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 				8F1BDDF22011850C0021D8C1 /* Random.swift */,
 				8F1BDDF6201232440021D8C1 /* Array+Additions.swift */,
 				8F4C938820110E7800E544AD /* Info.plist */,
+				8F1BDE212012B34E0021D8C1 /* Vector3.swift */,
 			);
 			path = ConvexHull;
 			sourceTree = "<group>";
@@ -240,6 +243,7 @@
 				8F1BDDF7201232440021D8C1 /* Array+Additions.swift in Sources */,
 				8F4C93AF20112F3000E544AD /* ConvexHull.swift in Sources */,
 				8F4C93A920111EFE00E544AD /* ConvexHullAlgorithm.swift in Sources */,
+				8F1BDE222012B34E0021D8C1 /* Vector3.swift in Sources */,
 				8F4C93AD20112BD800E544AD /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

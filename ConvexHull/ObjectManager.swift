@@ -65,6 +65,28 @@ internal class ObjectManager {
         face.reset()
         freeFaceIndices.push(faceIndex);
     }
+    
+    deinit {
+        for i in 0..<facePool.count {
+            var runner: ConvexFaceInternal? = facePool[i]
+            while let cur = runner {
+                runner = cur.next
+                cur.next = nil
+            }
+        }
+
+        var runner = connectorStack
+        while let cur = runner {
+            runner = cur.next
+            cur.next = nil
+            cur.face = nil
+        }
+        for i in 0..<deferredFaceStack.count {
+            deferredFaceStack[i].face = nil
+            deferredFaceStack[i].oldFace = nil
+            deferredFaceStack[i].pivot = nil
+        }
+    }
 
 
     /// Create a new face and put it in the pool.

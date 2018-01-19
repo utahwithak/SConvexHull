@@ -61,7 +61,7 @@ public class ConvexHull<TVertex: Vertex, TFace: ConvexFace> {
 
 
     /// Creates a convex hull of the input data.
-    public static func create(from data: [[Double]], planeDistanceTolerance tolerance: Double = Constants.defaultPlaneDistanceTolerance) -> ConvexHull<DefaultVertex, DefaultConvexFace<DefaultVertex>> {
+    public static func create(raw data: [[Double]], planeDistanceTolerance tolerance: Double = Constants.defaultPlaneDistanceTolerance) -> ConvexHull<DefaultVertex, DefaultConvexFace<DefaultVertex>> {
         let points = data.map{ DefaultVertex(position: $0)}
         return ConvexHull<DefaultVertex, DefaultConvexFace<DefaultVertex>>.create(with: points, planeDistanceTolerance: tolerance)
     }

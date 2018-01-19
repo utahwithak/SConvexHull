@@ -65,7 +65,7 @@ internal final class FaceConnector {
 
 
     /// Prev node in the list.
-    public var previous: FaceConnector?
+    weak public var previous: FaceConnector?
 
 
     /// The vertex indices.
@@ -165,7 +165,7 @@ internal final class ConvexFaceInternal
     //public int UnprocessedIndex;
 
     /// Prev node in the list.
-    public var previous: ConvexFaceInternal?
+    public weak var previous: ConvexFaceInternal?
 
     /// Used to traverse affected faces and create the Delaunay representation.
     public var tag = 0

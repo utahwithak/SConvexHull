@@ -195,6 +195,10 @@ internal class ConvexHullAlgorithm {
 
     }
 
+    deinit {
+        
+    }
+
     /// Check the dimensionality of the input data.
     private static func determineDimension(in vertices: [Vertex]) -> Int {
         var r = Xoroshiro(seed: (UInt64(arc4random()), UInt64(arc4random())))
@@ -1039,12 +1043,12 @@ internal class ConvexHullAlgorithm {
         for i in 0..<cellCount {
             let face = facePool[faces[i]];
             var cell = cells[i];
-            for j in 0..<dimensions {
-                if (face.adjacentFaces[j] < 0) {
-                    continue
-                }
-                cell.adjacency.append(cells[facePool[face.adjacentFaces[j]].tag])
-            }
+//            for j in 0..<dimensions {
+//                if (face.adjacentFaces[j] < 0) {
+//                    continue
+//                }
+//                cell.adjacency.append(cells[facePool[face.adjacentFaces[j]].tag])
+//            }
 
             // Fix the vertex orientation.
             if face.isNormalFlipped {
@@ -1052,9 +1056,9 @@ internal class ConvexHullAlgorithm {
                 cell.vertices[0] = cell.vertices[dimensions - 1];
                 cell.vertices[dimensions - 1] = tempVert;
 
-                let tempAdj = cell.adjacency[0];
-                cell.adjacency[0] = cell.adjacency[dimensions - 1];
-                cell.adjacency[dimensions - 1] = tempAdj;
+//                let tempAdj = cell.adjacency[0];
+//                cell.adjacency[0] = cell.adjacency[dimensions - 1];
+//                cell.adjacency[dimensions - 1] = tempAdj;
             }
         }
 

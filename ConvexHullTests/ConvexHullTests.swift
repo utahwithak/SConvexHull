@@ -31,8 +31,11 @@ class ConvexHullTests: XCTestCase {
                       [0.0,1.0,0.0],
                       [1.0,0.0,0.0],
                       [1.0,1.0,0.0]]
-        let hull = ConvexHull<DefaultVertex, DefaultConvexFace<DefaultVertex>>.create(from: verts)
-        XCTAssert(hull.faces.count == 12)
+        var hull: ConvexHull? = ConvexHull<DefaultVertex, DefaultConvexFace<DefaultVertex>>.create(raw: verts)
+        XCTAssert(hull!.faces.count == 12)
+
+        hull = nil
+        print("Leak?")
         // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
     
