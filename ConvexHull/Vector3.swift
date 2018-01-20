@@ -9,6 +9,7 @@
 import Foundation
 
 public struct Vector3 {
+    public static let zero = Vector3(x: 0, y: 0, z: 0)
     public var position: [Double]
     public var x: Double {
         get {

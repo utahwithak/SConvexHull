@@ -202,7 +202,7 @@ internal class ConvexHullAlgorithm {
         center = [Double](repeating: 0, count: dimensions)
         self.planeDistanceTolerance = planeDistanceTolerance
 
-        mathHelper = MathHelper(dimension: dimensions, positions: positions);
+        mathHelper = MathHelper(positions: positions);
         objectManager = ObjectManager(dimension: dimensions, facePool: facePool)
 
         repeatElement(0, count: numberOfVertices * dimensions).forEach({ positions.append($0)})
@@ -451,7 +451,7 @@ internal class ConvexHullAlgorithm {
         updateCenter()
         currentVertex = vertex2
         updateCenter()
-        var edgeVectors = [[Double]](repeating: [], count:dimensions)
+        var edgeVectors = [Vector3](repeating: .zero, count:dimensions)
         edgeVectors[0] = mathHelper.vectorBetweenVertices(toIndex: vertex2, fromIndex: vertex1);
         // now the remaining vertices are just combined in one big list
         var extremes = boundingBoxPoints.flatMap({ $0})
@@ -459,7 +459,7 @@ internal class ConvexHullAlgorithm {
         var index = 1;
         while index < dimensions && !extremes.isEmpty {
             var bestVertex = -1;
-            var bestEdgeVector = [Double]()
+            var bestEdgeVector = Vector3.zero
             var maxVolume = Constants.defaultPlaneDistanceTolerance;
             for i in stride(from: extremes.count - 1, through: 0, by: -1) {
                 // count backwards in order to remove potential duplicates
@@ -496,7 +496,7 @@ internal class ConvexHullAlgorithm {
             var allVertices = [Int](0..<numberOfVertices)
             while index < dimensions && !allVertices.isEmpty {
                 var bestVertex = -1;
-                var bestEdgeVector = [Double]()
+                var bestEdgeVector = Vector3.zero
                 var maxVolume = 0.0;
                 for i in stride(from: allVertices.count - 1, through: 0, by: -1) {
                     // count backwards in order to remove potential duplicates
@@ -530,7 +530,7 @@ internal class ConvexHullAlgorithm {
             var allVertices = [Int](0..<numberOfVertices)
             while index < dimensions && !allVertices.isEmpty {
                 var bestVertex = -1;
-                var bestEdgeVector = [Double]()
+                var bestEdgeVector = Vector3.zero
                 var maxVolume = 0.0;
                 for i in stride(from: allVertices.count - 1, through: 0, by: -1) {
                     // count backwards in order to remove potential duplicates

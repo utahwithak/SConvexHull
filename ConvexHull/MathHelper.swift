@@ -38,9 +38,6 @@ import Foundation
 /// FindNormalVectorND function.
 internal class MathHelper {
 
-    /// The dimension
-    private let dimension: Int
-
     /// The matrix pivots
     private var matrixPivots: [Int]
 
@@ -48,32 +45,26 @@ internal class MathHelper {
     private var nDMatrix: [Double]
 
     /// The n d normal helper vector
-    private var nDNormalHelperVector: [Double]
+    private var nDNormalHelperVector = Vector3(x: 0, y: 0, z: 0)
 
     /// The nt x
-    private var ntX: [Double]
+    private var ntX = Vector3(x: 0, y: 0, z: 0)
 
     /// The nt y
-    private var ntY: [Double]
+    private var ntY = Vector3(x: 0, y: 0, z: 0)
 
     /// The nt z
-    private var ntZ: [Double]
+    private var ntZ = Vector3(x: 0, y: 0, z: 0)
 
     /// The position data
     private var positionData: SimpleList<Double>
 
 
-    internal init(dimension: Int,  positions: SimpleList<Double>) {
+    internal init( positions: SimpleList<Double>) {
         self.positionData = positions
-        self.dimension = dimension
 
-        ntX = [Double](repeating:0, count: dimension)
-        ntY = [Double](repeating:0, count: dimension)
-        ntZ = [Double](repeating:0, count: dimension)
-
-        nDNormalHelperVector = [Double](repeating:0, count: dimension)
-        nDMatrix = [Double](repeating:0, count: dimension * dimension)
-        matrixPivots = [Int](repeating:0, count: dimension)
+        nDMatrix = [Double](repeating:0, count: 9)
+        matrixPivots = [0,0,0]
     }
 
     /// Calculates the normal and offset of the hyper-plane given by the face's vertices.
@@ -88,8 +79,8 @@ internal class MathHelper {
 
         var offset = 0.0;
         var centerDistance = 0.0;
-        let fi = vertices[0] * dimension;
-        for i in 0..<dimension {
+        let fi = vertices[0] * 3;
+        for i in 0..<3 {
             let n = face.normal[i]
             offset += n * positionData[fi + i];
             centerDistance += n * center[i];
@@ -98,7 +89,7 @@ internal class MathHelper {
         centerDistance -= offset;
 
         if centerDistance > 0 {
-            for i in 0..<dimension {
+            for i in 0..<3 {
                 face.normal[i] = -face.normal[i]
             }
             face.offset = offset;
@@ -114,7 +105,7 @@ internal class MathHelper {
     /// The vertex is "over face" if the return value is > Constants.PlaneDistanceTolerance.
     internal func getVertexDistance(v: Int, f: ConvexFaceInternal) -> Double {
         let normal = f.normal
-        let x = v * dimension;
+        let x = v * 3;
         var distance = f.offset;
         for i in 0..<3 {
             distance += normal[i] * positionData[x + i]
@@ -123,24 +114,18 @@ internal class MathHelper {
     }
 
     /// Returns the vector the between vertices.
-    internal func vectorBetweenVertices(toIndex: Int, fromIndex: Int) -> [Double] {
-        var target = [Double](repeating: 0, count: dimension)
-        vectorBetweenVertices(toIndex: toIndex, fromIndex: fromIndex, target: &target);
-        return target;
-    }
+    internal func vectorBetweenVertices( toIndex: Int, fromIndex: Int) -> Vector3 {
+        let u = toIndex * 3, v = fromIndex * 3;
+        return Vector3(x: positionData[u] - positionData[v],
+                       y: positionData[u + 1] - positionData[v + 1],
+                       z: positionData[u + 2] - positionData[v + 2])
 
-    /// Returns the vector the between vertices.
-    private func vectorBetweenVertices( toIndex: Int, fromIndex: Int, target: inout [Double]) {
-        let u = toIndex * dimension, v = fromIndex * dimension;
-        for i in 0..<dimension {
-            target[i] = positionData[u + i] - positionData[v + i];
-        }
     }
 
     var random = Xoroshiro(seed: (UInt64(arc4random()), UInt64(arc4random())))
 
     internal func randomOffsetToLift( index: Int, maxHeight: Double) {
-        let liftIndex = (index * dimension) + dimension - 1;
+        let liftIndex = (index * 3) + 3 - 1;
         let next = random.randomHalfOpen()
         positionData[liftIndex] += 0.0001 * maxHeight * ( next - 0.5)
     }
@@ -148,8 +133,8 @@ internal class MathHelper {
     /// Finds normal vector of a hyper-plane given by vertices.
     /// Stores the results to normalData.
     private func findNormalVector(vertices: [Int]) -> Vector3 {
-        vectorBetweenVertices(toIndex: vertices[1], fromIndex: vertices[0], target: &ntX);
-        vectorBetweenVertices(toIndex: vertices[2], fromIndex: vertices[1], target: &ntY);
+        let ntX = vectorBetweenVertices(toIndex: vertices[1], fromIndex: vertices[0]);
+        let ntY = vectorBetweenVertices(toIndex: vertices[2], fromIndex: vertices[1]);
 
         let nx = ntX[1] * ntY[2] - ntX[2] * ntY[1];
         let ny = ntX[2] * ntY[0] - ntX[0] * ntY[2];
@@ -166,11 +151,11 @@ internal class MathHelper {
     /// Gets the simplex volume. Prior to having enough edge vectors, the method pads the remaining with all
     /// "other numbers". So, yes, this method is not really finding the volume. But a relative volume-like measure. It
     /// uses the magnitude of the determinant as the volume stand-in following the Cayley-Menger theorem.
-    internal func getSimplexVolume(edgeVectors: [[Double]], lastIndex: Int, bigNumber: Double) -> Double {
-        var A = [Double](repeating: 0, count: dimension * dimension)
+    internal func getSimplexVolume(edgeVectors: [Vector3], lastIndex: Int, bigNumber: Double) -> Double {
+        var A = [Double](repeating: 0, count: 9)
         var index = 0;
-        for i in 0..<dimension {
-            for j in 0..<dimension {
+        for i in 0..<3 {
+            for j in 0..<3 {
                 if i <= lastIndex {
                     A[index] = edgeVectors[i][j];
                     index += 1
@@ -189,94 +174,9 @@ internal class MathHelper {
         // (the upper left) had too many zeros. So, one would need to find the right subset. Indeed choosing a subset
         // biases the first dimensions of the others. Perhaps a larger volume would be created from a different vertex
         // if another subset of dimensions were used.
-        return abs(determinantDestructive(&A));
+        return abs(A[0] * A[4] * A[8] + A[1] * A[5] * A[6] + A[2] * A[3] * A[7]
+            - A[0] * A[5] * A[7] - A[1] * A[3] * A[8] - A[2] * A[4] * A[6]);
     }
 
-    /// Determinants the destructive.
-    static var iPiv = [Int](repeating: 0, count: 5)
-    static var helper = [Double](repeating: 0, count:5)
 
-    private func determinantDestructive(_ A: inout [Double]) -> Double{
-        switch dimension {
-        case 0:
-            return 0
-        case 1:
-            return A[0]
-        case 2:
-            return A[0] * A[3] - A[1] * A[2];
-        case 3:
-            return A[0] * A[4] * A[8] + A[1] * A[5] * A[6] + A[2] * A[3] * A[7]
-                - A[0] * A[5] * A[7] - A[1] * A[3] * A[8] - A[2] * A[4] * A[6]
-        default:
-
-            MathHelper.LUFactor(data: &A, order: dimension, ipiv: &MathHelper.iPiv, vecLUcolj: &MathHelper.helper);
-            var det = 1.0;
-            for i in 0..<dimension {
-                det *= A[dimension * i + i];
-                if (MathHelper.iPiv[i] != i) {
-                    det *= -1; // the determinant sign changes on row swap.
-                }
-            }
-            return det;
-
-        }
-    }
-
-    private static func LUFactor(data: inout [Double], order: Int, ipiv: inout [Int], vecLUcolj: inout [Double]) {
-        // Initialize the pivot matrix to the identity permutation.
-        for i in 0..<order {
-            ipiv[i] = i
-        }
-
-        // Outer loop.
-        for j in 0..<order {
-            let indexj = j * order;
-            let indexjj = indexj + j;
-
-            // Make a copy of the j-th column to localize references.
-            for i in 0..<order {
-                vecLUcolj[i] = data[indexj + i];
-            }
-
-            // Apply previous transformations.
-            for i in 0..<order {
-                // Most of the time is spent in the following dot product.
-                let kmax = min(i, j)
-                var s = 0.0;
-                for k in 0..<kmax {
-                    s += data[k * order + i] * vecLUcolj[k];
-                }
-                vecLUcolj[i] -= s
-                data[indexj + i] = vecLUcolj[i]
-            }
-
-            // Find pivot and exchange if necessary.
-            var p = j;
-            for i in (j + 1)..<order {
-                if abs(vecLUcolj[i]) > abs(vecLUcolj[p]) {
-                    p = i;
-                }
-            }
-
-            if p != j {
-                for k in 0..<order {
-                    let indexk = k * order;
-                    let indexkp = indexk + p;
-                    let indexkj = indexk + j;
-                    let temp = data[indexkp];
-                    data[indexkp] = data[indexkj];
-                    data[indexkj] = temp;
-                }
-
-                ipiv[j] = p;
-            }
-
-            // Compute multipliers.
-            if j < order && data[indexjj] != 0.0 {
-                for i in (j + 1)..<order {
-                    data[indexj + i] /= data[indexjj];
-                }
-            }
-        }
-    }
 }
