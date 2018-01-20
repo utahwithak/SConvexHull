@@ -16,7 +16,6 @@
 		8F4C93A120110F2800E544AD /* MathHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93A020110F2800E544AD /* MathHelper.swift */; };
 		8F4C93A32011134A00E544AD /* DataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93A22011134A00E544AD /* DataModel.swift */; };
 		8F4C93A52011159100E544AD /* Collections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93A42011159100E544AD /* Collections.swift */; };
-		8F4C93A720111E0400E544AD /* ObjectManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93A620111E0400E544AD /* ObjectManager.swift */; };
 		8F4C93A920111EFE00E544AD /* ConvexHullAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93A820111EFE00E544AD /* ConvexHullAlgorithm.swift */; };
 		8F4C93AB201127C600E544AD /* ConvexFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93AA201127C600E544AD /* ConvexFace.swift */; };
 		8F4C93AD20112BD800E544AD /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93AC20112BD800E544AD /* Constants.swift */; };
@@ -46,7 +45,6 @@
 		8F4C93A020110F2800E544AD /* MathHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathHelper.swift; sourceTree = "<group>"; };
 		8F4C93A22011134A00E544AD /* DataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModel.swift; sourceTree = "<group>"; };
 		8F4C93A42011159100E544AD /* Collections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections.swift; sourceTree = "<group>"; };
-		8F4C93A620111E0400E544AD /* ObjectManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectManager.swift; sourceTree = "<group>"; };
 		8F4C93A820111EFE00E544AD /* ConvexHullAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexHullAlgorithm.swift; sourceTree = "<group>"; };
 		8F4C93AA201127C600E544AD /* ConvexFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexFace.swift; sourceTree = "<group>"; };
 		8F4C93AC20112BD800E544AD /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -101,7 +99,6 @@
 				8F4C93A020110F2800E544AD /* MathHelper.swift */,
 				8F4C93A22011134A00E544AD /* DataModel.swift */,
 				8F4C93A42011159100E544AD /* Collections.swift */,
-				8F4C93A620111E0400E544AD /* ObjectManager.swift */,
 				8F4C93AC20112BD800E544AD /* Constants.swift */,
 				8F1BDDF22011850C0021D8C1 /* Random.swift */,
 				8F1BDDF6201232440021D8C1 /* Array+Additions.swift */,
@@ -232,7 +229,6 @@
 			files = (
 				8F4C93A120110F2800E544AD /* MathHelper.swift in Sources */,
 				8F1BDDF32011850C0021D8C1 /* Random.swift in Sources */,
-				8F4C93A720111E0400E544AD /* ObjectManager.swift in Sources */,
 				8F4C93A32011134A00E544AD /* DataModel.swift in Sources */,
 				8F4C93AB201127C600E544AD /* ConvexFace.swift in Sources */,
 				8F4C93A52011159100E544AD /* Collections.swift in Sources */,

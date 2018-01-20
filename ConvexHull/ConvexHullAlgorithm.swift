@@ -66,7 +66,7 @@ internal class ConvexHullAlgorithm {
      * - AffectedFaceFlags are used to mark affected faces/
      */
     /// The face pool
-    internal let facePool = SimpleList<ConvexFaceInternal>()
+    private var facePool = [ConvexFaceInternal]()
 
     /// The affected face flags
     internal var affectedFaceFlags: [Bool]
@@ -134,10 +134,6 @@ internal class ConvexHullAlgorithm {
     /// especially for higher dimensions.
     private var connectorTable = [UInt64: [FaceConnector]]()
 
-
-    /// Manages the memory allocations and storage of unused objects.
-    private let objectManager: ObjectManager
-
     /// Helper class for handling math related stuff.
     private let mathHelper: MathHelper
     private var boundingBoxPoints: [[Int]]
@@ -145,6 +141,43 @@ internal class ConvexHullAlgorithm {
     private var minima = [0.0,0.0,0.0]
     private var maxima = [0.0,0.0,0.0]
 
+
+
+    private var connectors = [FaceConnector]()
+
+    private var emptyBufferStack = [IndexBuffer]()
+
+    private var freeFaceIndices = [Int]()
+
+    /// Return the face to the pool for later use.
+    internal func depositFace(at faceIndex: Int) {
+        let face = facePool[faceIndex]
+        face.reset()
+        freeFaceIndices.append(faceIndex);
+    }
+
+    /// Create a new face and put it in the pool.
+    private func createFace() -> Int {
+        let index = facePool.count
+        let face = ConvexFaceInternal(index: index);
+        facePool.append(face)
+        return index
+    }
+
+    public func getFace() -> Int {
+        return freeFaceIndices.popLast() ?? createFace()
+    }
+
+    /// Store a face connector in the "embedded" linked list.
+    public func depositConnector(_ connector: FaceConnector) {
+        connectors.append(connector)
+    }
+
+    /// Get an unused face connector. If none is available, create it.
+    public func getConnector() -> FaceConnector {
+        return connectors.popLast() ?? FaceConnector()
+
+    }
 
 
     public static func getConvexHull(with data:[Vector3], planeDistanceTolerance tolerance: Double) -> ConvexHull {
@@ -170,7 +203,6 @@ internal class ConvexHullAlgorithm {
         self.planeDistanceTolerance = planeDistanceTolerance
 
         mathHelper = MathHelper(positions: positions);
-        objectManager = ObjectManager(facePool: facePool)
 
         repeatElement(0, count: numberOfVertices * 3).forEach({ positions.append($0)})
 
@@ -366,7 +398,7 @@ internal class ConvexHullAlgorithm {
                     k += 1
                 }
             }
-            let newFace = facePool[objectManager.getFace()]
+            let newFace = facePool[getFace()]
 
             newFace.vertices = vertices.sorted()
 
@@ -693,8 +725,8 @@ internal class ConvexHullAlgorithm {
                 FaceConnector.connect(a: current, b: connector)
                 current.face = nil
                 connector.face = nil
-                objectManager.depositConnector(current);
-                objectManager.depositConnector(connector);
+                depositConnector(current);
+                depositConnector(connector);
                 return;
             }
         }
@@ -738,8 +770,7 @@ internal class ConvexHullAlgorithm {
 
                 var oldVertexIndex = 0
 
-                let newFaceIndex = objectManager.getFace();
-                let newFace = facePool[newFaceIndex];
+                let newFace = facePool[getFace()];
 
                 for j in 0..<3 {
                     newFace.vertices[j] = oldFace.vertices[j];
@@ -807,7 +838,7 @@ internal class ConvexHullAlgorithm {
                     continue;
 
                 }
-                let connector = objectManager.getConnector();
+                let connector = getConnector();
                 connector.update(face: newFace, edgeIndex: j)
                 connectFace(with: connector);
             }
@@ -836,7 +867,7 @@ internal class ConvexHullAlgorithm {
         for fIndex in 0..<affectedFaceBuffer.count {
             let faceIndex = affectedFaceBuffer[fIndex];
             unprocessedFaces.remove(facePool[faceIndex]);
-            objectManager.depositFace(at: faceIndex);
+            depositFace(at: faceIndex);
         }
     }
 
