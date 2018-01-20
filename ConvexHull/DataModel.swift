@@ -54,15 +54,14 @@ internal final class FaceConnector {
     /// The face.
     public var face: ConvexFaceInternal?;
 
-
     /// The hash code computed from indices.
     public var hashCode: UInt64 = 0
 
     /// The vertex indices.
-    public var vertices: [Int]
+    public var vertices = [0,0]
 
-    public init(dimension: Int) {
-        vertices = [Int](repeating: 0, count: dimension - 1)
+    public init() {
+
     }
 
     /// Updates the connector.
@@ -128,7 +127,7 @@ internal final class FaceConnector {
 internal final class ConvexFaceInternal
 {
     /// Gets or sets the adjacent face data.
-    public var adjacentFaces: [Int]
+    public var adjacentFaces = [0,0,0]
 
     /// The furthest vertex.
     public var furthestVertex = 0
@@ -146,7 +145,7 @@ internal final class ConvexFaceInternal
     public var next: ConvexFaceInternal?
 
     /// Gets or sets the normal vector.
-    public var normal: Vector3
+    public var normal = Vector3.zero
 
     /// Face plane constant element.
     public var offset: Double = 0
@@ -158,16 +157,13 @@ internal final class ConvexFaceInternal
     public var tag = 0
 
     /// Gets or sets the vertices.
-    public var vertices: [Int]
+    public var vertices = [0,0,0]
 
     /// Gets or sets the vertices beyond.
     public var verticesBeyond = [Int]()
 
-    public init(dimension: Int, index: Int) {
+    public init(index: Int) {
         self.index = index
-        adjacentFaces = [Int](repeating: 0, count: dimension)
-        normal = Vector3(x: 0, y: 0, z: 0)
-        vertices = [Int](repeating: 0, count: dimension)
     }
 
     func reset() {

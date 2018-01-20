@@ -39,8 +39,6 @@ import Foundation
 /// cases O(1) vs O(number of created faces)).
 internal class ObjectManager {
 
-    private let dimension: Int
-
     private var connectors = [FaceConnector]()
 
     private var emptyBufferStack = [IndexBuffer]()
@@ -49,8 +47,7 @@ internal class ObjectManager {
 
     private var freeFaceIndices = [Int]()
 
-    init(dimension: Int, facePool: SimpleList<ConvexFaceInternal>) {
-        self.dimension = dimension
+    init(facePool: SimpleList<ConvexFaceInternal>) {
         self.facePool = facePool;
     }
 
@@ -65,7 +62,7 @@ internal class ObjectManager {
     /// Create a new face and put it in the pool.
     private func createFace() -> Int {
         let index = facePool.count
-        let face = ConvexFaceInternal(dimension: dimension, index: index);
+        let face = ConvexFaceInternal(index: index);
         facePool.append(face)
         return index
     }
@@ -81,7 +78,7 @@ internal class ObjectManager {
 
     /// Get an unused face connector. If none is available, create it.
     public func getConnector() -> FaceConnector {
-        return connectors.popLast() ?? FaceConnector(dimension: dimension)
+        return connectors.popLast() ?? FaceConnector()
 
     }
 

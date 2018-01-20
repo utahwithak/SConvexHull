@@ -68,7 +68,7 @@ internal class MathHelper {
     }
 
     /// Calculates the normal and offset of the hyper-plane given by the face's vertices.
-    internal func calculateFacePlane(face: ConvexFaceInternal, center: [Double]) -> Bool {
+    internal func calculateFacePlane(face: ConvexFaceInternal, center: Vector3) -> Bool {
         var vertices = face.vertices;
 
         face.normal = findNormalVector(vertices: vertices);

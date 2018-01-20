@@ -33,8 +33,6 @@ import Foundation
 
 internal class ConvexHullAlgorithm {
 
-    internal let dimensions: Int
-
     /// Are we on a paraboloid?
     private let isLifted: Bool
 
@@ -94,7 +92,7 @@ internal class ConvexHullAlgorithm {
 
 
     /// The centroid of the currently computed hull.
-    private var center: [Double]
+    private var center = Vector3.zero
 
     /*
      * Helper arrays to store faces for adjacency update.
@@ -144,8 +142,8 @@ internal class ConvexHullAlgorithm {
     private let mathHelper: MathHelper
     private var boundingBoxPoints: [[Int]]
     private var indexOfDimensionWithLeastExtremes = 0
-    private var minima: [Double]
-    private var maxima: [Double]
+    private var minima = [0.0,0.0,0.0]
+    private var maxima = [0.0,0.0,0.0]
 
 
 
@@ -153,14 +151,7 @@ internal class ConvexHullAlgorithm {
 
         let ch = ConvexHullAlgorithm(vertices: data, lift: false, planeDistanceTolerance: tolerance)
         ch.generateConvexHull()
-        if ch.dimensions == 2 {
-            print("do something with 2d")
-            return ConvexHull(points: [], faces: [])
-        } else {
-            return ConvexHull(points: ch.hullVertices(data: data), faces: ch.getConvexFaces())
-        }
-
-
+        return ConvexHull(points: ch.hullVertices(data: data), faces: ch.getConvexFaces())
     }
 
     private init( vertices: [Vector3],  lift: Bool, planeDistanceTolerance: Double) {
@@ -168,44 +159,20 @@ internal class ConvexHullAlgorithm {
         self.vertices = vertices
         numberOfVertices = vertices.count
 
-        var r = Xoroshiro(seed: (UInt64(arc4random()), UInt64(arc4random())))
-        var dimensionCheck = [0,0,0,0,0,0,0,0,0,0]
-        let max = vertices.count
 
-        for i in 0..<10 {
-            dimensionCheck[i] = (vertices[r.next(max: max)].position.count);
-        }
-
-        guard let calcDims = dimensionCheck.min() else {
-            fatalError("No min")
-        }
-
-        if calcDims != dimensionCheck.max() {
-            fatalError("Invalid input data (non-uniform dimension).");
-        }
-        self.dimensions = calcDims + (isLifted ? 1 : 0)
-        guard self.dimensions >= 2 else {
-            fatalError("Dimension of the input must be 2 or greater.")
-        }
-
-        guard numberOfVertices > dimensions else {
-            fatalError("There are too few vertices (m) for the n-dimensional space.")
-        }
-        maxima = [Double](repeating: 0, count: dimensions)
-        minima = [Double](repeating: 0, count: dimensions)
-        boundingBoxPoints = [[Int]](repeating: [], count: dimensions)
+        boundingBoxPoints = [[Int]](repeating: [], count: 3)
         vertexVisited = [Bool](repeating: false, count: numberOfVertices)
         positions = SimpleList<Double>()
-        affectedFaceFlags = [Bool](repeating: false, count: (dimensions + 1) * 10)
-        updateBuffer = [Int](repeating: 0, count: dimensions)
-        updateIndices = [Int](repeating: 0, count: dimensions)
-        center = [Double](repeating: 0, count: dimensions)
+        affectedFaceFlags = [Bool](repeating: false, count: (3 + 1) * 10)
+        updateBuffer = [Int](repeating: 0, count: 3)
+        updateIndices = [Int](repeating: 0, count: 3)
+
         self.planeDistanceTolerance = planeDistanceTolerance
 
         mathHelper = MathHelper(positions: positions);
-        objectManager = ObjectManager(dimension: dimensions, facePool: facePool)
+        objectManager = ObjectManager(facePool: facePool)
 
-        repeatElement(0, count: numberOfVertices * dimensions).forEach({ positions.append($0)})
+        repeatElement(0, count: numberOfVertices * 3).forEach({ positions.append($0)})
 
     }
 
@@ -257,7 +224,7 @@ internal class ConvexHullAlgorithm {
         if isLifted { // "Lifted" means that the last dimension is the sum of the squares of the others.
             for v in vertices {
                 var parabolaTerm = 0.0 // the lifted term is a sum of squares.
-                let origNumDim = dimensions - 1;
+                let origNumDim = 3 - 1;
                 for i in 0..<origNumDim {
                     let coordinate = v.position[i]
                     positions[index] = coordinate;
@@ -269,7 +236,7 @@ internal class ConvexHullAlgorithm {
             }
         } else {
             for v in vertices {
-                for i in 0..<dimensions {
+                for i in 0..<3 {
                     positions[index] = v.position[i]
                     index += 1
                 }
@@ -281,7 +248,7 @@ internal class ConvexHullAlgorithm {
     private func findBoundingBoxPoints() {
         indexOfDimensionWithLeastExtremes = -1;
         var minNumExtremes = Int.max
-        for i in 0..<dimensions {
+        for i in 0..<3 {
             var minIndices = [Int]()
             var maxIndices = [Int]()
             var min = Double.greatestFiniteMagnitude
@@ -339,7 +306,7 @@ internal class ConvexHullAlgorithm {
     private func shiftAndScalePositions() {
         let positionsLength = positions.count
         if isLifted {
-            let origNumDim = dimensions - 1;
+            let origNumDim = 3 - 1;
             let minSum = Double(minima.reduce(0, {$0 + abs($1)}))
             let maxSum = Double(maxima.reduce(0, { $0 + abs($1)}))
             let parabolaScale = 2.0 / (minSum + maxSum - abs(maxima[origNumDim]) - abs(minima[origNumDim]))
@@ -350,13 +317,13 @@ internal class ConvexHullAlgorithm {
             minima[origNumDim] *= parabolaScale; // change the extreme values as well
             maxima[origNumDim] *= parabolaScale;
             // it is done here because
-            for i in stride(from: origNumDim, to:positionsLength, by: dimensions) {
+            for i in stride(from: origNumDim, to:positionsLength, by: 3) {
                 positions[i] *= parabolaScale;
             }
 
         }
-        var shiftAmount = [Double](repeating: 0, count: dimensions)
-        for i in 0..<dimensions {
+        var shiftAmount = Vector3.zero
+        for i in 0..<3 {
             // now the entire model is shifted to all positive numbers...plus some more.
             // why?
             // 1) to avoid dealing with a point at the origin {0,0,...,0} which causes problems
@@ -374,7 +341,7 @@ internal class ConvexHullAlgorithm {
             }
         }
         for i in 0..<positionsLength {
-            positions[i] += shiftAmount[i % dimensions];
+            positions[i] += shiftAmount[i % 3];
         }
 
     }
@@ -388,12 +355,12 @@ internal class ConvexHullAlgorithm {
     private func createInitialSimplex() {
         var initialPoints = findInitialPoints();
         //create the first faces from (dimension + 1) vertices.
-        var faces = [Int](repeating:0, count: dimensions + 1)
+        var faces = [Int](repeating:0, count: 3 + 1)
 
-        for i in 0..<(dimensions + 1) {
-            var vertices = [Int](repeating:0, count:dimensions)
+        for i in 0..<(3 + 1) {
+            var vertices = [0,0,0]
             var k = 0
-            for j in 0...dimensions {
+            for j in 0...3 {
                 if i != j {
                     vertices[k] = initialPoints[j];
                     k += 1
@@ -407,8 +374,8 @@ internal class ConvexHullAlgorithm {
             faces[i] = newFace.index;
         }
         // update the adjacency (check all pairs of faces)
-        for i in 0..<dimensions {
-            for j in (i + 1)..<(dimensions + 1) {
+        for i in 0..<3 {
+            for j in (i + 1)..<(3 + 1) {
                 updateAdjacency(l: facePool[faces[i]], r: facePool[faces[j]]);
             }
         }
@@ -437,7 +404,7 @@ internal class ConvexHullAlgorithm {
 
     /// Finds (dimension + 1) initial points.
     private func findInitialPoints() -> [Int] {
-        let bigNumber = maxima.reduce(0,+) * Double(dimensions * numberOfVertices)
+        let bigNumber = maxima.reduce(0,+) * Double(3 * numberOfVertices)
         // the first two points are taken from the dimension that had the fewest extremes
         // well, in most cases there will only be 2 in all dimensions: one min and one max
         // but a lot of engineering part shapes are nice and square and can have hundreds of
@@ -451,13 +418,13 @@ internal class ConvexHullAlgorithm {
         updateCenter()
         currentVertex = vertex2
         updateCenter()
-        var edgeVectors = [Vector3](repeating: .zero, count:dimensions)
+        var edgeVectors = [Vector3](repeating: .zero, count:3)
         edgeVectors[0] = mathHelper.vectorBetweenVertices(toIndex: vertex2, fromIndex: vertex1);
         // now the remaining vertices are just combined in one big list
         var extremes = boundingBoxPoints.flatMap({ $0})
         // otherwise find the remaining points by maximizing the initial simplex volume
         var index = 1;
-        while index < dimensions && !extremes.isEmpty {
+        while index < 3 && !extremes.isEmpty {
             var bestVertex = -1;
             var bestEdgeVector = Vector3.zero
             var maxVolume = Constants.defaultPlaneDistanceTolerance;
@@ -492,9 +459,9 @@ internal class ConvexHullAlgorithm {
         // As an extreme, the bounding box can be made in n dimensions from only 2 unique points. When we can't find
         // enough unique points, we start again with ALL the vertices. The following is a near replica of the code
         // above, but instead of extremes, we consider "allVertices".
-        if initialPoints.count <= dimensions && !isLifted {
+        if initialPoints.count <= 3 && !isLifted {
             var allVertices = [Int](0..<numberOfVertices)
-            while index < dimensions && !allVertices.isEmpty {
+            while index < 3 && !allVertices.isEmpty {
                 var bestVertex = -1;
                 var bestEdgeVector = Vector3.zero
                 var maxVolume = 0.0;
@@ -526,9 +493,9 @@ internal class ConvexHullAlgorithm {
                 updateCenter();
             }
         }
-        if initialPoints.count <= dimensions && isLifted {
+        if initialPoints.count <= 3 && isLifted {
             var allVertices = [Int](0..<numberOfVertices)
-            while index < dimensions && !allVertices.isEmpty {
+            while index < 3 && !allVertices.isEmpty {
                 var bestVertex = -1;
                 var bestEdgeVector = Vector3.zero
                 var maxVolume = 0.0;
@@ -562,8 +529,8 @@ internal class ConvexHullAlgorithm {
                 updateCenter();
             }
         }
-        if initialPoints.count <= dimensions && isLifted {
-            fatalError("The input data is degenerate. It appears to exist in \(dimensions) dimensions, but it is a \(dimensions - 1) dimensional set (i.e. the points are collinear, coplanar, or co-hyperplanar.)")
+        if initialPoints.count <= 3 && isLifted {
+            fatalError("The input data is degenerate. It appears to exist in \(3) dimensions, but it is a \(3 - 1) dimensional set (i.e. the points are collinear, coplanar, or co-hyperplanar.)")
         }
         return initialPoints;
     }
@@ -590,7 +557,7 @@ internal class ConvexHullAlgorithm {
             }
         }
         // no vertex was marked
-        if i == dimensions{
+        if i == 3 {
             return;
         }
 
@@ -631,7 +598,7 @@ internal class ConvexHullAlgorithm {
     /// Get a vertex coordinate. In order to reduce speed, all vertex coordinates
     /// have been placed in a single array.
     private func getCoordinate(vIndex: Int, dimension: Int) -> Double {
-        return positions[(vIndex * dimensions) + dimension]
+        return positions[(vIndex * 3) + dimension]
     }
 
 
@@ -659,8 +626,8 @@ internal class ConvexHullAlgorithm {
     /// by first checking the first coordinate and then progressing through the rest.
     /// In this way {2, 8} will be a "-1" (less than) {3, 1}.
     private func lexCompare(u: Int, v: Int) -> Int {
-        let uOffset = u * dimensions, vOffset = v * dimensions
-        for i in 0..<dimensions {
+        let uOffset = u * 3, vOffset = v * 3
+        for i in 0..<3 {
             let x = positions[uOffset + i], y = positions[vOffset + i];
             if x < y {
                 return -1
@@ -673,13 +640,13 @@ internal class ConvexHullAlgorithm {
 
     /// Recalculates the centroid of the current hull.
     private func updateCenter() {
-        for i in 0..<dimensions {
+        for i in 0..<3 {
             center[i] *= Double(convexHullSize)
         }
         convexHullSize += 1;
         let f = 1.0 / Double(convexHullSize)
-        let co = currentVertex * dimensions;
-        for i in 0..<dimensions {
+        let co = currentVertex * 3;
+        for i in 0..<3 {
             center[i] = f * (center[i] + positions[co + i])
         }
     }
@@ -700,7 +667,7 @@ internal class ConvexHullAlgorithm {
         affectedFaceFlags[currentFace] = true
         while let toVisit = traverseStack.pop() {
             let top = facePool[toVisit]
-            for i in 0..<dimensions {
+            for i in 0..<3 {
                 let adjFace = top.adjacentFaces[i];
 
                 if !affectedFaceFlags[adjFace] && mathHelper.getVertexDistance(v: currentVertex, f: facePool[adjFace]) >= planeDistanceTolerance {
@@ -746,7 +713,7 @@ internal class ConvexHullAlgorithm {
 
             // Find the faces that need to be updated
             var updateCount = 0;
-            for i in 0..<dimensions {
+            for i in 0..<3 {
                 let af = oldFace.adjacentFaces[i]
                 if !affectedFaceFlags[af] {
                     updateBuffer[updateCount] = af
@@ -774,7 +741,7 @@ internal class ConvexHullAlgorithm {
                 let newFaceIndex = objectManager.getFace();
                 let newFace = facePool[newFaceIndex];
 
-                for j in 0..<dimensions {
+                for j in 0..<3 {
                     newFace.vertices[j] = oldFace.vertices[j];
                 }
                 oldVertexIndex = newFace.vertices[forbidden];
@@ -793,8 +760,8 @@ internal class ConvexHullAlgorithm {
                         }
                     }
                 } else {
-                    orderedPivotIndex = dimensions - 1;
-                    for j in (forbidden + 1)..<dimensions {
+                    orderedPivotIndex = 3 - 1;
+                    for j in (forbidden + 1)..<3 {
                         if newFace.vertices[j] < currentVertexIndex {
                             newFace.vertices[j - 1] = newFace.vertices[j];
                         } else {
@@ -835,7 +802,7 @@ internal class ConvexHullAlgorithm {
             adjacentFace.adjacentFaces[face.pivotIndex] = newFace.index;
 
             // let there be a connection.
-            for j in 0..<dimensions {
+            for j in 0..<3 {
                 if (j == orderedPivotIndex) {
                     continue;
 
@@ -894,13 +861,13 @@ internal class ConvexHullAlgorithm {
 
     /// Removes the last vertex from the center.
     private func rollbackCenter() {
-        for i in 0..<dimensions {
+        for i in 0..<3 {
             center[i] *= Double(convexHullSize)
         }
         convexHullSize -= 1;
         let f = convexHullSize > 0 ? 1.0 / Double(convexHullSize) : 0.0
-        let co = currentVertex * dimensions;
-        for i in 0..<dimensions {
+        let co = currentVertex * 3;
+        for i in 0..<3 {
             center[i] = f * (center[i] - positions[co + i])
         }
     }
@@ -1007,10 +974,8 @@ internal class ConvexHullAlgorithm {
         for i in 0..<cellCount {
             let face = facePool[faces[i]];
             var vertices = [Vector3]()
-            for j in 0..<dimensions
-            {
-                let faceIndex = face.vertices[j]
-                vertices.append(self.vertices[faceIndex])
+            for j in 0..<3 {
+                vertices.append(self.vertices[face.vertices[j]])
             }
             let conFace = ConvexFace(vertices: vertices, normal: isLifted ? Vector3(x:0,y:0,z:0) : face.normal)
             cells.append(conFace)
@@ -1025,8 +990,8 @@ internal class ConvexHullAlgorithm {
                 var cell = cells[i];
 
                 let tempVert = cells[i].vertices[0];
-                cell.vertices[0] = cell.vertices[dimensions - 1];
-                cell.vertices[dimensions - 1] = tempVert;
+                cell.vertices[0] = cell.vertices[3 - 1];
+                cell.vertices[3 - 1] = tempVert;
                 cells[i] = cell
 
             }
