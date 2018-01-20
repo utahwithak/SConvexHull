@@ -58,15 +58,6 @@ internal final class FaceConnector {
     /// The hash code computed from indices.
     public var hashCode: UInt64 = 0
 
-
-    /// Next node in the list.
-    public var next: FaceConnector?
-
-
-    /// Prev node in the list.
-    weak public var previous: FaceConnector?
-
-
     /// The vertex indices.
     public var vertices: [Int]
 

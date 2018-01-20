@@ -41,7 +41,7 @@ internal class ObjectManager {
 
     private let dimension: Int
 
-    private var connectorStack: FaceConnector?
+    private var connectors = [FaceConnector]()
 
     private var emptyBufferStack = [IndexBuffer]()
 
@@ -76,27 +76,13 @@ internal class ObjectManager {
 
     /// Store a face connector in the "embedded" linked list.
     public func depositConnector(_ connector: FaceConnector) {
-        if let stack = connectorStack {
-            connector.next = stack
-            connectorStack = connector;
-        } else {
-            connector.next = nil;
-            connectorStack = connector;
-        }
-
-
+        connectors.append(connector)
     }
 
     /// Get an unused face connector. If none is available, create it.
     public func getConnector() -> FaceConnector {
+        return connectors.popLast() ?? FaceConnector(dimension: dimension)
 
-        if let ret = connectorStack {
-            connectorStack = ret.next
-            ret.next = nil
-            return ret;
-        } else {
-            return FaceConnector(dimension: dimension)
-        }
     }
 
 }

@@ -134,7 +134,7 @@ internal class ConvexHullAlgorithm {
     /// The connector table helps to determine the adjacency of convex faces.
     /// Hashing is used instead of pairwise comparison. This significantly speeds up the computations,
     /// especially for higher dimensions.
-    private var connectorTable: [ConnectorList]
+    private var connectorTable = [UInt64: [FaceConnector]]()
 
 
     /// Manages the memory allocations and storage of unused objects.
@@ -196,7 +196,6 @@ internal class ConvexHullAlgorithm {
         boundingBoxPoints = [[Int]](repeating: [], count: dimensions)
         vertexVisited = [Bool](repeating: false, count: numberOfVertices)
         positions = SimpleList<Double>()
-        connectorTable = (0..<Constants.connectorTableSize).map { _ in return ConnectorList()}
         affectedFaceFlags = [Bool](repeating: false, count: (dimensions + 1) * 10)
         updateBuffer = [Int](repeating: 0, count: dimensions)
         updateIndices = [Int](repeating: 0, count: dimensions)
@@ -715,12 +714,15 @@ internal class ConvexHullAlgorithm {
 
     /// Connect faces using a connector.
     private func connectFace(with connector: FaceConnector) {
-        let index = Int(connector.hashCode % UInt64(Constants.connectorTableSize))
-        let list = connectorTable[index];
-        var runner = list.first
-        while let current = runner {
+        let index = connector.hashCode % UInt64(Constants.connectorTableSize)
+        var list = connectorTable[index] ?? []
+        defer {
+            connectorTable[index] = list
+        }
+
+        for (index, current) in list.enumerated() {
             if FaceConnector.areConnectable(a: connector, b: current) {
-                list.remove(connector: current);
+                list.remove(at: index)
                 FaceConnector.connect(a: current, b: connector)
                 current.face = nil
                 connector.face = nil
@@ -728,7 +730,6 @@ internal class ConvexHullAlgorithm {
                 objectManager.depositConnector(connector);
                 return;
             }
-            runner = current.next
         }
 
         list.append(connector);
