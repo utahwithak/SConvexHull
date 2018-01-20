@@ -52,7 +52,7 @@ internal class ConvexHullAlgorithm {
      *   a specific face.
      */
     /// The vertices
-    private let vertices: [Vertex]
+    private let vertices: [Vector3]
 
     /// The positions
     private var positions: SimpleList<Double>
@@ -149,13 +149,13 @@ internal class ConvexHullAlgorithm {
 
 
 
-    public static func getConvexHull<V: Vertex, F: ConvexFace> (with data:[V], planeDistanceTolerance tolerance: Double) -> ConvexHull<V,F> {
+    public static func getConvexHull(with data:[Vector3], planeDistanceTolerance tolerance: Double) -> ConvexHull {
 
         let ch = ConvexHullAlgorithm(vertices: data, lift: false, planeDistanceTolerance: tolerance)
         ch.generateConvexHull()
         if ch.dimensions == 2 {
             print("do something with 2d")
-            return ConvexHull<V,F>()
+            return ConvexHull(points: [], faces: [])
         } else {
             return ConvexHull(points: ch.hullVertices(data: data), faces: ch.getConvexFaces())
         }
@@ -163,7 +163,7 @@ internal class ConvexHullAlgorithm {
 
     }
 
-    private init( vertices: [Vertex],  lift: Bool, planeDistanceTolerance: Double) {
+    private init( vertices: [Vector3],  lift: Bool, planeDistanceTolerance: Double) {
         isLifted = lift
         self.vertices = vertices
         numberOfVertices = vertices.count
@@ -971,7 +971,7 @@ internal class ConvexHullAlgorithm {
 
 
     /// Gets the hull vertices.
-    private func hullVertices<T: Vertex>(data: [T]) -> [T] {
+    private func hullVertices(data: [Vector3]) -> [Vector3] {
         let cellCount = convexFaces.count
 
         for i in 0..<numberOfVertices {
@@ -988,7 +988,7 @@ internal class ConvexHullAlgorithm {
             }
         }
 
-        var result = [T]()
+        var result = [Vector3]()
         for i in 0..<numberOfVertices {
             if vertexVisited[i] {
                 result.append(data[i])
@@ -999,42 +999,36 @@ internal class ConvexHullAlgorithm {
     }
 
     /// Finds the convex hull and creates the TFace objects.
-    private func getConvexFaces<V, F: ConvexFace>() -> [F] where F.TVertex == V {
+    private func getConvexFaces() -> [ConvexFace] {
         let faces = convexFaces
         let cellCount = faces.count
-        var cells = [F]()
+        var cells = [ConvexFace]()
 
         for i in 0..<cellCount {
             let face = facePool[faces[i]];
-            var vertices = [V]()
-            for j in 0..<dimensions {
+            var vertices = [Vector3]()
+            for j in 0..<dimensions
+            {
                 let faceIndex = face.vertices[j]
-                vertices.append(self.vertices[faceIndex] as! V)
+                vertices.append(self.vertices[faceIndex])
             }
-            let conFace = F(verts: vertices, adjacency: [F](), normal: isLifted ? [] : face.normal)
+            let conFace = ConvexFace(vertices: vertices, normal: isLifted ? Vector3(x:0,y:0,z:0) : face.normal)
             cells.append(conFace)
             face.tag = i;
         }
 
         for i in 0..<cellCount {
             let face = facePool[faces[i]];
-            var cell = cells[i];
-//            for j in 0..<dimensions {
-//                if (face.adjacentFaces[j] < 0) {
-//                    continue
-//                }
-//                cell.adjacency.append(cells[facePool[face.adjacentFaces[j]].tag])
-//            }
 
             // Fix the vertex orientation.
             if face.isNormalFlipped {
-                let tempVert = cell.vertices[0];
+                var cell = cells[i];
+
+                let tempVert = cells[i].vertices[0];
                 cell.vertices[0] = cell.vertices[dimensions - 1];
                 cell.vertices[dimensions - 1] = tempVert;
+                cells[i] = cell
 
-//                let tempAdj = cell.adjacency[0];
-//                cell.adjacency[0] = cell.adjacency[dimensions - 1];
-//                cell.adjacency[dimensions - 1] = tempAdj;
             }
         }
 

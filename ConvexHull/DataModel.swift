@@ -146,7 +146,7 @@ internal final class ConvexFaceInternal
     public var next: ConvexFaceInternal?
 
     /// Gets or sets the normal vector.
-    public var normal: [Double]
+    public var normal: Vector3
 
     /// Face plane constant element.
     public var offset: Double = 0
@@ -166,7 +166,7 @@ internal final class ConvexFaceInternal
     public init(dimension: Int, index: Int) {
         self.index = index
         adjacentFaces = [Int](repeating: 0, count: dimension)
-        normal = [Double](repeating: 0, count: dimension)
+        normal = Vector3(x: 0, y: 0, z: 0)
         vertices = [Int](repeating: 0, count: dimension)
     }
 

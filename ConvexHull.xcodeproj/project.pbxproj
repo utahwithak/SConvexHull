@@ -13,7 +13,6 @@
 		8F4C938E20110E7800E544AD /* ConvexHull.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4C938420110E7800E544AD /* ConvexHull.framework */; };
 		8F4C939320110E7800E544AD /* ConvexHullTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C939220110E7800E544AD /* ConvexHullTests.swift */; };
 		8F4C939520110E7800E544AD /* ConvexHull.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F4C938720110E7800E544AD /* ConvexHull.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F4C939F20110EAC00E544AD /* Vertex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C939E20110EAC00E544AD /* Vertex.swift */; };
 		8F4C93A120110F2800E544AD /* MathHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93A020110F2800E544AD /* MathHelper.swift */; };
 		8F4C93A32011134A00E544AD /* DataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93A22011134A00E544AD /* DataModel.swift */; };
 		8F4C93A52011159100E544AD /* Collections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4C93A42011159100E544AD /* Collections.swift */; };
@@ -44,7 +43,6 @@
 		8F4C938D20110E7800E544AD /* ConvexHullTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ConvexHullTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F4C939220110E7800E544AD /* ConvexHullTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexHullTests.swift; sourceTree = "<group>"; };
 		8F4C939420110E7800E544AD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8F4C939E20110EAC00E544AD /* Vertex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Vertex.swift; sourceTree = "<group>"; };
 		8F4C93A020110F2800E544AD /* MathHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathHelper.swift; sourceTree = "<group>"; };
 		8F4C93A22011134A00E544AD /* DataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModel.swift; sourceTree = "<group>"; };
 		8F4C93A42011159100E544AD /* Collections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collections.swift; sourceTree = "<group>"; };
@@ -97,7 +95,7 @@
 			children = (
 				8F4C938720110E7800E544AD /* ConvexHull.h */,
 				8F4C93A820111EFE00E544AD /* ConvexHullAlgorithm.swift */,
-				8F4C939E20110EAC00E544AD /* Vertex.swift */,
+				8F1BDE212012B34E0021D8C1 /* Vector3.swift */,
 				8F4C93AE20112F3000E544AD /* ConvexHull.swift */,
 				8F4C93AA201127C600E544AD /* ConvexFace.swift */,
 				8F4C93A020110F2800E544AD /* MathHelper.swift */,
@@ -108,7 +106,6 @@
 				8F1BDDF22011850C0021D8C1 /* Random.swift */,
 				8F1BDDF6201232440021D8C1 /* Array+Additions.swift */,
 				8F4C938820110E7800E544AD /* Info.plist */,
-				8F1BDE212012B34E0021D8C1 /* Vector3.swift */,
 			);
 			path = ConvexHull;
 			sourceTree = "<group>";
@@ -233,7 +230,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F4C939F20110EAC00E544AD /* Vertex.swift in Sources */,
 				8F4C93A120110F2800E544AD /* MathHelper.swift in Sources */,
 				8F1BDDF32011850C0021D8C1 /* Random.swift in Sources */,
 				8F4C93A720111E0400E544AD /* ObjectManager.swift in Sources */,

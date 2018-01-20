@@ -32,40 +32,22 @@
 import Foundation
 
 /// Representation of a convex hull.
-public class ConvexHull<TVertex: Vertex, TFace: ConvexFace> {
+public class ConvexHull {
 
-    /// Can only be created using a factory method.
-    internal init() {
-        points = []
-        faces = []
-    }
-    internal init(points: [Vertex], faces: [TFace]) {
+    internal init(points: [Vector3], faces: [ConvexFace]) {
         self.points = points
         self.faces = faces
     }
 
     /// Points of the convex hull.
-    public let points: [Vertex]
+    public let points: [Vector3]
 
     /// Faces of the convex hull.
-    public let faces: [TFace]
+    public let faces: [ConvexFace]
 
     /// Creates the convex hull
-    public static func create<V: Vertex,F: ConvexFace>(with data: [V], planeDistanceTolerance tolerance: Double = Constants.defaultPlaneDistanceTolerance) -> ConvexHull<V,F> {
+    public static func create(with data: [Vector3], planeDistanceTolerance tolerance: Double = Constants.defaultPlaneDistanceTolerance) -> ConvexHull{
         return ConvexHullAlgorithm.getConvexHull(with: data, planeDistanceTolerance: tolerance)
     }
-
-    public static func create<V: Vertex>(from data: [V], planeDistanceTolerance tolerance: Double = Constants.defaultPlaneDistanceTolerance) -> ConvexHull<V, DefaultConvexFace<V>> {
-        return ConvexHull<V, DefaultConvexFace<TVertex>>.create(with: data, planeDistanceTolerance: tolerance)
-    }
-
-
-    /// Creates a convex hull of the input data.
-    public static func create(raw data: [[Double]], planeDistanceTolerance tolerance: Double = Constants.defaultPlaneDistanceTolerance) -> ConvexHull<DefaultVertex, DefaultConvexFace<DefaultVertex>> {
-        let points = data.map{ DefaultVertex(position: $0)}
-        return ConvexHull<DefaultVertex, DefaultConvexFace<DefaultVertex>>.create(with: points, planeDistanceTolerance: tolerance)
-    }
-
-
 
 }

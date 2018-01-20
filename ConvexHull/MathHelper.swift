@@ -80,9 +80,9 @@ internal class MathHelper {
     internal func calculateFacePlane(face: ConvexFaceInternal, center: [Double]) -> Bool {
         var vertices = face.vertices;
 
-        findNormalVector(vertices: vertices, normalData: &face.normal);
+        face.normal = findNormalVector(vertices: vertices);
 
-        if face.normal[0].isNaN {
+        if face.normal.x.isNaN {
             return false
         }
 
@@ -116,7 +116,7 @@ internal class MathHelper {
         let normal = f.normal
         let x = v * dimension;
         var distance = f.offset;
-        for i in 0..<normal.count {
+        for i in 0..<3 {
             distance += normal[i] * positionData[x + i]
         }
         return distance;
@@ -147,36 +147,7 @@ internal class MathHelper {
 
     /// Finds normal vector of a hyper-plane given by vertices.
     /// Stores the results to normalData.
-    private func findNormalVector(vertices: [Int], normalData: inout [Double]) {
-        switch dimension {
-        case 2:
-            findNormalVector2D(vertices: vertices, normal: &normalData);
-        case 3:
-            findNormalVector3D(vertices: vertices, normal: &normalData);
-        case 4:
-            findNormalVector4D(vertices: vertices, normal: &normalData);
-        default:
-            findNormalVectorND(vertices: vertices, normal: &normalData);
-        }
-    }
-
-    /// Finds 2D normal vector.
-    private func findNormalVector2D(vertices: [Int], normal: inout [Double]) {
-
-        vectorBetweenVertices(toIndex: vertices[1], fromIndex: vertices[0], target: &ntX);
-
-        let nx = -ntX[1];
-        let ny = ntX[0];
-
-        let norm = sqrt(nx * nx + ny * ny);
-
-        let f = 1.0 / norm;
-        normal[0] = f * nx;
-        normal[1] = f * ny;
-    }
-
-    /// Finds 3D normal vector
-    private func findNormalVector3D( vertices: [Int], normal: inout [Double]) {
+    private func findNormalVector(vertices: [Int]) -> Vector3 {
         vectorBetweenVertices(toIndex: vertices[1], fromIndex: vertices[0], target: &ntX);
         vectorBetweenVertices(toIndex: vertices[2], fromIndex: vertices[1], target: &ntY);
 
@@ -187,83 +158,10 @@ internal class MathHelper {
         let norm = sqrt(nx * nx + ny * ny + nz * nz);
 
         let f = 1.0 / norm;
-        normal[0] = f * nx;
-        normal[1] = f * ny;
-        normal[2] = f * nz;
+        return Vector3(x: f * nx, y: f * ny, z: f * nz)
     }
 
-    /// Finds 4D normal vector
-    private func findNormalVector4D(vertices: [Int], normal: inout [Double]) {
-        vectorBetweenVertices(toIndex: vertices[1], fromIndex: vertices[0], target: &ntX);
-        vectorBetweenVertices(toIndex: vertices[2], fromIndex: vertices[1], target: &ntY);
-        vectorBetweenVertices(toIndex: vertices[3], fromIndex: vertices[2], target: &ntZ);
 
-        var x = ntX;
-        var y = ntY;
-        var z = ntZ;
-
-        // This was generated using Mathematica
-        let nx = x[3] * (y[2] * z[1] - y[1] * z[2])
-            + x[2] * (y[1] * z[3] - y[3] * z[1])
-            + x[1] * (y[3] * z[2] - y[2] * z[3]);
-        let ny = x[3] * (y[0] * z[2] - y[2] * z[0])
-            + x[2] * (y[3] * z[0] - y[0] * z[3])
-            + x[0] * (y[2] * z[3] - y[3] * z[2]);
-        let nz = x[3] * (y[1] * z[0] - y[0] * z[1])
-            + x[1] * (y[0] * z[3] - y[3] * z[0])
-            + x[0] * (y[3] * z[1] - y[1] * z[3]);
-        let nw = x[2] * (y[0] * z[1] - y[1] * z[0])
-            + x[1] * (y[2] * z[0] - y[0] * z[2])
-            + x[0] * (y[1] * z[2] - y[2] * z[1]);
-
-        let norm = sqrt(nx * nx + ny * ny + nz * nz + nw * nw);
-
-        let f = 1.0 / norm;
-        normal[0] = f * nx;
-        normal[1] = f * ny;
-        normal[2] = f * nz;
-        normal[3] = f * nw;
-    }
-
-    /// Finds the normal vector nd.
-    private func findNormalVectorND(vertices: [Int], normal: inout [Double]) {
-        /* We need to solve the matrix A n = B where
-         *  - A contains coordinates of vertices as columns
-         *  - B is vector with all 1's. Really, it should be the distance of
-         *      the plane from the origin, but - since we're not worried about that
-         *      here and we will normalize the normal anyway - all 1's suffices.
-         */
-        var norm = 0.0;
-
-        // Solve determinants by replacing x-th column by all 1.
-        for x in 0..<dimension {
-            for i in 0..<dimension {
-                let offset = vertices[i] * dimension;
-                for j in 0..<dimension {
-                    // maybe I got the i/j mixed up here regarding the representation Math.net uses...
-                    // ...but it does not matter since Det(A) = Det(Transpose(A)).
-                    nDMatrix[dimension * i + j] = j == x ? 1.0 : positionData[offset + j];
-                }
-            }
-            MathHelper.LUFactor(data: &nDMatrix, order: dimension, ipiv: &matrixPivots, vecLUcolj: &nDNormalHelperVector);
-            var coord = 1.0;
-            for i in 0..<dimension {
-                if matrixPivots[i] != i {
-                    coord *= -nDMatrix[dimension * i + i]; // the determinant sign changes on row swap.
-                } else {
-                    coord *= nDMatrix[dimension * i + i];
-                }
-            }
-            normal[x] = coord;
-            norm += coord * coord;
-        }
-
-        // Normalize the result
-        let f = 1.0 / sqrt(norm);
-        for i in 0..<normal.count {
-            normal[i] *= f
-        }
-    }
 
     /// Gets the simplex volume. Prior to having enough edge vectors, the method pads the remaining with all
     /// "other numbers". So, yes, this method is not really finding the volume. But a relative volume-like measure. It
