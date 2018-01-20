@@ -41,112 +41,48 @@ internal class ObjectManager {
 
     private let dimension: Int
 
-    private var connectorStack: FaceConnector?
+    private var connectors = [FaceConnector]()
 
-    private let deferredFaceStack: SimpleList<DeferredFace>
-
-    private let emptyBufferStack: SimpleList<IndexBuffer>
+    private var emptyBufferStack = [IndexBuffer]()
 
     private let facePool: SimpleList<ConvexFaceInternal>
 
-    private let freeFaceIndices: IndexBuffer
+    private var freeFaceIndices = [Int]()
 
     init(dimension: Int, facePool: SimpleList<ConvexFaceInternal>) {
         self.dimension = dimension
         self.facePool = facePool;
-        freeFaceIndices = IndexBuffer()
-        emptyBufferStack = SimpleList<IndexBuffer>()
-        deferredFaceStack = SimpleList<DeferredFace>()
     }
 
     /// Return the face to the pool for later use.
     internal func depositFace(at faceIndex: Int) {
         let face = facePool[faceIndex]
         face.reset()
-        freeFaceIndices.push(faceIndex);
-    }
-    
-    deinit {
-        for i in 0..<facePool.count {
-            var runner: ConvexFaceInternal? = facePool[i]
-            while let cur = runner {
-                runner = cur.next
-                cur.next = nil
-            }
-        }
-
-        var runner = connectorStack
-        while let cur = runner {
-            runner = cur.next
-            cur.next = nil
-            cur.face = nil
-        }
-        for i in 0..<deferredFaceStack.count {
-            deferredFaceStack[i].face = nil
-            deferredFaceStack[i].oldFace = nil
-            deferredFaceStack[i].pivot = nil
-        }
+        freeFaceIndices.append(faceIndex);
     }
 
 
     /// Create a new face and put it in the pool.
     private func createFace() -> Int {
         let index = facePool.count
-        let face = ConvexFaceInternal(dimension: dimension, index: index, beyondList: getVertexBuffer());
+        let face = ConvexFaceInternal(dimension: dimension, index: index);
         facePool.append(face)
         return index
     }
 
     public func getFace() -> Int {
-        return freeFaceIndices.pop() ?? createFace()
+        return freeFaceIndices.popLast() ?? createFace()
     }
 
     /// Store a face connector in the "embedded" linked list.
     public func depositConnector(_ connector: FaceConnector) {
-        if let stack = connectorStack {
-            connector.next = stack
-            connectorStack = connector;
-        } else {
-            connector.next = nil;
-            connectorStack = connector;
-        }
-
-
+        connectors.append(connector)
     }
 
     /// Get an unused face connector. If none is available, create it.
     public func getConnector() -> FaceConnector {
+        return connectors.popLast() ?? FaceConnector(dimension: dimension)
 
-        if let ret = connectorStack {
-            connectorStack = ret.next
-            ret.next = nil
-            return ret;
-        } else {
-            return FaceConnector(dimension: dimension)
-        }
-    }
-
-    /// Deposit the index buffer.
-    public func depositVertexBuffer(_ buffer: IndexBuffer) {
-        buffer.clear();
-        emptyBufferStack.append(buffer);
-    }
-
-
-    /// Get a store index buffer or create a new instance.
-    public func getVertexBuffer() -> IndexBuffer {
-        return emptyBufferStack.pop() ?? IndexBuffer()
-    }
-
-    /// Deposit the deferred face.
-    public func depositDeferredFace(_ face: DeferredFace) {
-        deferredFaceStack.append(face);
-    }
-
-
-    /// Get the deferred face.
-    public func getDeferredFace() -> DeferredFace {
-        return deferredFaceStack.pop() ?? DeferredFace()
     }
 
 }

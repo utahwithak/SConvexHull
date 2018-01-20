@@ -31,18 +31,17 @@
 
 import Foundation
 
-internal final class DeferredFace {
+internal struct DeferredFace {
 
     /// The faces.
-    var face: ConvexFaceInternal?
-    var pivot: ConvexFaceInternal?
-    var oldFace: ConvexFaceInternal?
+    let face: ConvexFaceInternal
+    let pivot: ConvexFaceInternal
+    let oldFace: ConvexFaceInternal
 
 
     /// The indices.
-
-    var faceIndex = 0
-    var pivotIndex = 0
+    let faceIndex: Int
+    let pivotIndex: Int
 }
 
 
@@ -59,15 +58,6 @@ internal final class FaceConnector {
     /// The hash code computed from indices.
     public var hashCode: UInt64 = 0
 
-
-    /// Next node in the list.
-    public var next: FaceConnector?
-
-
-    /// Prev node in the list.
-    weak public var previous: FaceConnector?
-
-
     /// The vertex indices.
     public var vertices: [Int]
 
@@ -81,18 +71,17 @@ internal final class FaceConnector {
         self.edgeIndex = edgeIndex;
 
         var hashCode: UInt64 = 23;
-
-        var vs = face.vertices;
+        let count = face.vertices.count
         var c = 0;
         for i in 0..<edgeIndex {
-            vertices[c] = vs[i];
+            vertices[c] = face.vertices[i];
             c += 1
-            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(vs[i]))
+            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(face.vertices[i]))
         }
-        for i in (edgeIndex + 1)..<vs.count {
-            vertices[c] = vs[i];
+        for i in (edgeIndex + 1)..<count {
+            vertices[c] = face.vertices[i];
             c += 1
-            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(vs[i]))
+            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(face.vertices[i]))
 
         }
 
@@ -162,8 +151,6 @@ internal final class ConvexFaceInternal
     /// Face plane constant element.
     public var offset: Double = 0
 
-    //public int UnprocessedIndex;
-
     /// Prev node in the list.
     public weak var previous: ConvexFaceInternal?
 
@@ -174,12 +161,11 @@ internal final class ConvexFaceInternal
     public var vertices: [Int]
 
     /// Gets or sets the vertices beyond.
-    public var verticesBeyond: IndexBuffer
+    public var verticesBeyond = [Int]()
 
-    public init(dimension: Int, index: Int, beyondList: IndexBuffer) {
+    public init(dimension: Int, index: Int) {
         self.index = index
         adjacentFaces = [Int](repeating: 0, count: dimension)
-        verticesBeyond = beyondList;
         normal = [Double](repeating: 0, count: dimension)
         vertices = [Int](repeating: 0, count: dimension)
     }

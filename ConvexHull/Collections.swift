@@ -62,14 +62,7 @@ internal class SimpleList<T> {
         items.append(item)
     }
 
-    /// Pushes the value to the back of the list.
-    public func push(_ item: T) {
-        append(item)
-    }
-
-
     /// Pops the last value from the list.
-
     public func pop() -> T? {
         return items.popLast()
     }
@@ -159,42 +152,5 @@ internal final class FaceList {
 
         face.next = nil
         face.previous = nil
-    }
-}
-
-internal final class ConnectorList {
-
-    private var last: FaceConnector?
-
-    public var first: FaceConnector?
-
-    public func append(_ element: FaceConnector) {
-        if let last = last {
-            last.next = element;
-        }
-
-        element.previous = last;
-        last = element;
-        if first == nil {
-            first = element
-        }
-    }
-
-    public func remove( connector: FaceConnector) {
-
-        if let prev = connector.previous {
-            prev.next = connector.next
-        } else if connector.previous == nil {
-            first = connector.next
-        }
-
-        if let next = connector.next {
-            next.previous = connector.previous;
-        } else if connector.next == nil {
-            last = connector.previous
-        }
-
-        connector.next = nil
-        connector.previous = nil
     }
 }

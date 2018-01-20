@@ -42,7 +42,7 @@ internal class MathHelper {
     private let dimension: Int
 
     /// The matrix pivots
-    private var matrixPivots : [Int]
+    private var matrixPivots: [Int]
 
     /// The n d matrix
     private var nDMatrix: [Double]
@@ -111,8 +111,8 @@ internal class MathHelper {
     }
 
     /// Check if the vertex is "visible" from the face.
-    /// The vertex is "over face" if the return value is &gt; Constants.PlaneDistanceTolerance.
-    internal func getVertexDistance(v: Int, f: ConvexFaceInternal ) -> Double {
+    /// The vertex is "over face" if the return value is > Constants.PlaneDistanceTolerance.
+    internal func getVertexDistance(v: Int, f: ConvexFaceInternal) -> Double {
         let normal = f.normal
         let x = v * dimension;
         var distance = f.offset;
@@ -277,7 +277,9 @@ internal class MathHelper {
                     A[index] = edgeVectors[i][j];
                     index += 1
                 } else {
-                    A[index] = ( Double(truncating: pow(-1, index) as NSNumber) * Double(index)) / bigNumber
+                    let multiplier = index % 2 == 0 ? 1.0 : -1.0
+
+                    A[index] = ( multiplier * Double(index)) / bigNumber
                     index += 1
                 }
             }
