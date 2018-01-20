@@ -42,7 +42,7 @@ internal class MathHelper {
     private let dimension: Int
 
     /// The matrix pivots
-    private var matrixPivots : [Int]
+    private var matrixPivots: [Int]
 
     /// The n d matrix
     private var nDMatrix: [Double]

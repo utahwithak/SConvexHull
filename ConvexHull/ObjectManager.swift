@@ -43,17 +43,15 @@ internal class ObjectManager {
 
     private var connectorStack: FaceConnector?
 
-    private let emptyBufferStack: SimpleList<IndexBuffer>
+    private var emptyBufferStack = [IndexBuffer]()
 
     private let facePool: SimpleList<ConvexFaceInternal>
 
-    private let freeFaceIndices: IndexBuffer
+    private var freeFaceIndices = [Int]()
 
     init(dimension: Int, facePool: SimpleList<ConvexFaceInternal>) {
         self.dimension = dimension
         self.facePool = facePool;
-        freeFaceIndices = IndexBuffer()
-        emptyBufferStack = SimpleList<IndexBuffer>()
     }
 
     /// Return the face to the pool for later use.
@@ -67,13 +65,13 @@ internal class ObjectManager {
     /// Create a new face and put it in the pool.
     private func createFace() -> Int {
         let index = facePool.count
-        let face = ConvexFaceInternal(dimension: dimension, index: index, beyondList: getVertexBuffer());
+        let face = ConvexFaceInternal(dimension: dimension, index: index);
         facePool.append(face)
         return index
     }
 
     public func getFace() -> Int {
-        return freeFaceIndices.pop() ?? createFace()
+        return freeFaceIndices.popLast() ?? createFace()
     }
 
     /// Store a face connector in the "embedded" linked list.
@@ -99,18 +97,6 @@ internal class ObjectManager {
         } else {
             return FaceConnector(dimension: dimension)
         }
-    }
-
-    /// Deposit the index buffer.
-    public func depositVertexBuffer(_ buffer: IndexBuffer) {
-        buffer.clear();
-        emptyBufferStack.append(buffer);
-    }
-
-
-    /// Get a store index buffer or create a new instance.
-    public func getVertexBuffer() -> IndexBuffer {
-        return emptyBufferStack.pop() ?? IndexBuffer()
     }
 
 }

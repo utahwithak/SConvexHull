@@ -117,7 +117,7 @@ internal class ConvexHullAlgorithm {
 
 
     /// Used to determine which vertices are "above" (or "beyond") a face
-    private var beyondBuffer = IndexBuffer()
+    private var beyondBuffer = [Int]()
 
 
     /// Stores faces that are visible from the current vertex.
@@ -167,9 +167,24 @@ internal class ConvexHullAlgorithm {
         isLifted = lift
         self.vertices = vertices
         numberOfVertices = vertices.count
-        dimensions = ConvexHullAlgorithm.determineDimension(in: vertices) + (isLifted ? 1 : 0)
 
-        guard dimensions >= 2 else {
+        var r = Xoroshiro(seed: (UInt64(arc4random()), UInt64(arc4random())))
+        var dimensionCheck = [0,0,0,0,0,0,0,0,0,0]
+        let max = vertices.count
+
+        for i in 0..<10 {
+            dimensionCheck[i] = (vertices[r.next(max: max)].position.count);
+        }
+
+        guard let calcDims = dimensionCheck.min() else {
+            fatalError("No min")
+        }
+
+        if calcDims != dimensionCheck.max() {
+            fatalError("Invalid input data (non-uniform dimension).");
+        }
+        self.dimensions = calcDims + (isLifted ? 1 : 0)
+        guard self.dimensions >= 2 else {
             fatalError("Dimension of the input must be 2 or greater.")
         }
 
@@ -199,28 +214,7 @@ internal class ConvexHullAlgorithm {
         
     }
 
-    /// Check the dimensionality of the input data.
-    private static func determineDimension(in vertices: [Vertex]) -> Int {
-        var r = Xoroshiro(seed: (UInt64(arc4random()), UInt64(arc4random())))
-        var dimensions = [Int]()
-        let max = vertices.count
-        for _ in 0..<10 {
-            dimensions.append(vertices[r.next(max: max)].position.count);
-        }
-        guard let dimension = dimensions.min() else {
-            fatalError("No min")
-        }
-
-        if dimension != dimensions.max() {
-            fatalError("Invalid input data (non-uniform dimension).");
-        }
-        return dimension;
-    }
-
-
-
     /// Gets/calculates the convex hull. This is
-
     private func generateConvexHull() {
         // accessing a 1D array is quicker than a jagged array, so the first step is to make this array
         serializeVerticesToPositions();
@@ -629,7 +623,7 @@ internal class ConvexHullAlgorithm {
         maxDistance = -Double.greatestFiniteMagnitude
         furthestVertex = 0
         for i in 0..<numberOfVertices where !vertexVisited[i] {
-            isBeyond(face: face, beyondVertices: face.verticesBeyond, v: i)
+            isBeyond(face: face, beyondVertices: &face.verticesBeyond, v: i)
         }
 
         face.furthestVertex = furthestVertex;
@@ -643,7 +637,7 @@ internal class ConvexHullAlgorithm {
 
 
     /// Check whether the vertex v is beyond the given face. If so, add it to beyondVertices.
-    private func isBeyond(face: ConvexFaceInternal,  beyondVertices: IndexBuffer, v: Int) {
+    private func isBeyond(face: ConvexFaceInternal, beyondVertices: inout [Int], v: Int) {
         let distance = mathHelper.getVertexDistance(v: v, f: face);
         if distance >= planeDistanceTolerance {
             if distance > maxDistance {
@@ -852,19 +846,18 @@ internal class ConvexHullAlgorithm {
 
             // the id adjacent face on the hull? If so, we can use simple method to find beyond vertices.
             if (adjacentFace.verticesBeyond.count == 0){
-                findBeyondVertices(face: newFace, beyond: oldFace.verticesBeyond);
+                findBeyondVertices(face: newFace, beyond: &oldFace.verticesBeyond);
             } else if (adjacentFace.verticesBeyond.count < oldFace.verticesBeyond.count) { // it is slightly more effective if the face with the lower number of beyond vertices comes first.
-                findBeyondVertices(face: newFace, beyond: adjacentFace.verticesBeyond, beyond1: oldFace.verticesBeyond);
+                findBeyondVertices(face: newFace, beyond: &adjacentFace.verticesBeyond, beyond1: &oldFace.verticesBeyond);
             } else {
-                findBeyondVertices(face: newFace, beyond: oldFace.verticesBeyond, beyond1: adjacentFace.verticesBeyond);
+                findBeyondVertices(face: newFace, beyond: &oldFace.verticesBeyond, beyond1: &adjacentFace.verticesBeyond);
             }
 
             // This face will definitely lie on the hull
-            if newFace.verticesBeyond.count == 0 {
+            if newFace.verticesBeyond.isEmpty {
                 convexFaces.append(newFace.index);
                 unprocessedFaces.remove(newFace);
-                objectManager.depositVertexBuffer(newFace.verticesBeyond);
-                newFace.verticesBeyond = emptyBuffer;
+                newFace.verticesBeyond.removeAll(keepingCapacity: true)
             } else {
                 unprocessedFaces.append(newFace);
             }
@@ -894,8 +887,7 @@ internal class ConvexHullAlgorithm {
 
             convexFaces.append(face.index);
             unprocessedFaces.remove(face);
-            objectManager.depositVertexBuffer(face.verticesBeyond);
-            face.verticesBeyond = emptyBuffer;
+            face.verticesBeyond.removeAll(keepingCapacity: true)
         }
     }
 
@@ -913,8 +905,7 @@ internal class ConvexHullAlgorithm {
     }
 
     /// Used by update faces.
-    private func findBeyondVertices(face: ConvexFaceInternal, beyond: IndexBuffer , beyond1: IndexBuffer ) {
-        let beyondVertices = beyondBuffer;
+    private func findBeyondVertices(face: ConvexFaceInternal, beyond: inout [Int] , beyond1: inout [Int] ) {
         maxDistance = Double.greatestFiniteMagnitude * -1
         furthestVertex = 0;
         var v = 0
@@ -930,30 +921,29 @@ internal class ConvexHullAlgorithm {
                 continue
             }
             vertexVisited[v] = false;
-            isBeyond(face: face, beyondVertices: beyondVertices, v: v)
+            isBeyond(face: face, beyondVertices: &beyondBuffer, v: v)
         }
 
         for i in 0..<beyond1.count {
             v = beyond1[i];
             if vertexVisited[v] {
-                isBeyond(face: face, beyondVertices: beyondVertices, v: v);
+                isBeyond(face: face, beyondVertices: &beyondBuffer, v: v);
             }
         }
 
         face.furthestVertex = furthestVertex;
 
         // Pull the old switch a roo (switch the face beyond buffers)
-        let temp = face.verticesBeyond;
-        face.verticesBeyond = beyondVertices;
+        var temp = face.verticesBeyond;
+        face.verticesBeyond = beyondBuffer
         if (temp.count > 0){
-            temp.clear();
+            temp.removeAll(keepingCapacity: true)
         }
         beyondBuffer = temp;
     }
 
     /// Finds the beyond vertices.
-    private func findBeyondVertices(face: ConvexFaceInternal , beyond: IndexBuffer){
-        let beyondVertices = beyondBuffer;
+    private func findBeyondVertices(face: ConvexFaceInternal , beyond: inout [Int]){
 
         maxDistance = -Double.greatestFiniteMagnitude
         furthestVertex = 0;
@@ -964,18 +954,18 @@ internal class ConvexHullAlgorithm {
             if v == currentVertex {
                 continue
             }
-            isBeyond(face: face, beyondVertices: beyondVertices, v: v);
+            isBeyond(face: face, beyondVertices: &beyondBuffer, v: v);
         }
 
         face.furthestVertex = furthestVertex;
 
         // Pull the old switch a roo (switch the face beyond buffers)
-        let temp = face.verticesBeyond;
-        face.verticesBeyond = beyondVertices;
+        var temp = face.verticesBeyond
+        face.verticesBeyond = beyondBuffer
         if temp.count > 0 {
-            temp.clear()
+            temp.removeAll(keepingCapacity: true)
         }
-        beyondBuffer = temp;
+        beyondBuffer = temp
     }
 
 

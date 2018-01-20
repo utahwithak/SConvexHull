@@ -160,8 +160,6 @@ internal final class ConvexFaceInternal
     /// Face plane constant element.
     public var offset: Double = 0
 
-    //public int UnprocessedIndex;
-
     /// Prev node in the list.
     public weak var previous: ConvexFaceInternal?
 
@@ -172,12 +170,11 @@ internal final class ConvexFaceInternal
     public var vertices: [Int]
 
     /// Gets or sets the vertices beyond.
-    public var verticesBeyond: IndexBuffer
+    public var verticesBeyond = [Int]()
 
-    public init(dimension: Int, index: Int, beyondList: IndexBuffer) {
+    public init(dimension: Int, index: Int) {
         self.index = index
         adjacentFaces = [Int](repeating: 0, count: dimension)
-        verticesBeyond = beyondList;
         normal = [Double](repeating: 0, count: dimension)
         vertices = [Int](repeating: 0, count: dimension)
     }
