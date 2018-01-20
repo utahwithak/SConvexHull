@@ -62,14 +62,7 @@ internal class SimpleList<T> {
         items.append(item)
     }
 
-    /// Pushes the value to the back of the list.
-    public func push(_ item: T) {
-        append(item)
-    }
-
-
     /// Pops the last value from the list.
-
     public func pop() -> T? {
         return items.popLast()
     }

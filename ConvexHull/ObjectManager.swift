@@ -43,8 +43,6 @@ internal class ObjectManager {
 
     private var connectorStack: FaceConnector?
 
-    private let deferredFaceStack: SimpleList<DeferredFace>
-
     private let emptyBufferStack: SimpleList<IndexBuffer>
 
     private let facePool: SimpleList<ConvexFaceInternal>
@@ -56,36 +54,13 @@ internal class ObjectManager {
         self.facePool = facePool;
         freeFaceIndices = IndexBuffer()
         emptyBufferStack = SimpleList<IndexBuffer>()
-        deferredFaceStack = SimpleList<DeferredFace>()
     }
 
     /// Return the face to the pool for later use.
     internal func depositFace(at faceIndex: Int) {
         let face = facePool[faceIndex]
         face.reset()
-        freeFaceIndices.push(faceIndex);
-    }
-    
-    deinit {
-        for i in 0..<facePool.count {
-            var runner: ConvexFaceInternal? = facePool[i]
-            while let cur = runner {
-                runner = cur.next
-                cur.next = nil
-            }
-        }
-
-        var runner = connectorStack
-        while let cur = runner {
-            runner = cur.next
-            cur.next = nil
-            cur.face = nil
-        }
-        for i in 0..<deferredFaceStack.count {
-            deferredFaceStack[i].face = nil
-            deferredFaceStack[i].oldFace = nil
-            deferredFaceStack[i].pivot = nil
-        }
+        freeFaceIndices.append(faceIndex);
     }
 
 
@@ -136,17 +111,6 @@ internal class ObjectManager {
     /// Get a store index buffer or create a new instance.
     public func getVertexBuffer() -> IndexBuffer {
         return emptyBufferStack.pop() ?? IndexBuffer()
-    }
-
-    /// Deposit the deferred face.
-    public func depositDeferredFace(_ face: DeferredFace) {
-        deferredFaceStack.append(face);
-    }
-
-
-    /// Get the deferred face.
-    public func getDeferredFace() -> DeferredFace {
-        return deferredFaceStack.pop() ?? DeferredFace()
     }
 
 }

@@ -719,27 +719,13 @@ internal class ConvexHullAlgorithm {
         }
     }
 
-    /// Creates a new deferred face.
-    private func makeDeferredFace( face: ConvexFaceInternal,  faceIndex: Int,  pivot: ConvexFaceInternal,  pivotIndex: Int,  oldFace: ConvexFaceInternal) -> DeferredFace {
-        let ret = objectManager.getDeferredFace();
-
-        ret.face = face;
-        ret.faceIndex = faceIndex;
-        ret.pivot = pivot;
-        ret.pivotIndex = pivotIndex;
-        ret.oldFace = oldFace;
-
-        return ret;
-    }
-
-
     /// Connect faces using a connector.
     private func connectFace(with connector: FaceConnector) {
         let index = Int(connector.hashCode % UInt64(Constants.connectorTableSize))
         let list = connectorTable[index];
-        var current = list.first
-        while current != nil {
-            if let current = current, FaceConnector.areConnectable(a: connector, b: current) {
+        var runner = list.first
+        while let current = runner {
+            if FaceConnector.areConnectable(a: connector, b: current) {
                 list.remove(connector: current);
                 FaceConnector.connect(a: current, b: connector)
                 current.face = nil
@@ -748,7 +734,7 @@ internal class ConvexHullAlgorithm {
                 objectManager.depositConnector(connector);
                 return;
             }
-            current = current?.next
+            runner = current.next
         }
 
         list.append(connector);
@@ -828,8 +814,10 @@ internal class ConvexHullAlgorithm {
                 if !mathHelper.calculateFacePlane(face: newFace, center: center) {
                     return false;
                 }
+                let deferredFace = DeferredFace(face: newFace, pivot: adjacentFace, oldFace: oldFace, faceIndex: orderedPivotIndex, pivotIndex: oldFaceAdjacentIndex)
 
-                coneFaceBuffer.append(makeDeferredFace(face: newFace, faceIndex: orderedPivotIndex, pivot: adjacentFace, pivotIndex: oldFaceAdjacentIndex, oldFace: oldFace))
+                coneFaceBuffer.append(deferredFace)
+
             }
         }
 
@@ -842,9 +830,9 @@ internal class ConvexHullAlgorithm {
         for  i in 0..<coneFaceBuffer.count {
             let face = coneFaceBuffer[i];
 
-            guard let newFace = face.face, let adjacentFace = face.pivot, let oldFace = face.oldFace else {
-                fatalError("Missing Face!")
-            }
+            let newFace = face.face
+            let adjacentFace = face.pivot
+            let oldFace = face.oldFace
 
             let orderedPivotIndex = face.faceIndex;
 
@@ -858,7 +846,7 @@ internal class ConvexHullAlgorithm {
 
                 }
                 let connector = objectManager.getConnector();
-                connector.update(face: newFace, edgeIndex: j);
+                connector.update(face: newFace, edgeIndex: j)
                 connectFace(with: connector);
             }
 
@@ -878,12 +866,9 @@ internal class ConvexHullAlgorithm {
                 objectManager.depositVertexBuffer(newFace.verticesBeyond);
                 newFace.verticesBeyond = emptyBuffer;
             } else {
-
                 unprocessedFaces.append(newFace);
             }
 
-            // recycle the object.
-            objectManager.depositDeferredFace(face);
         }
 
         // Recycle the affected faces.

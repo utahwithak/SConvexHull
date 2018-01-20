@@ -31,18 +31,17 @@
 
 import Foundation
 
-internal final class DeferredFace {
+internal struct DeferredFace {
 
     /// The faces.
-    var face: ConvexFaceInternal?
-    var pivot: ConvexFaceInternal?
-    var oldFace: ConvexFaceInternal?
+    let face: ConvexFaceInternal
+    let pivot: ConvexFaceInternal
+    let oldFace: ConvexFaceInternal
 
 
     /// The indices.
-
-    var faceIndex = 0
-    var pivotIndex = 0
+    let faceIndex: Int
+    let pivotIndex: Int
 }
 
 
@@ -81,18 +80,17 @@ internal final class FaceConnector {
         self.edgeIndex = edgeIndex;
 
         var hashCode: UInt64 = 23;
-
-        var vs = face.vertices;
+        let count = face.vertices.count
         var c = 0;
         for i in 0..<edgeIndex {
-            vertices[c] = vs[i];
+            vertices[c] = face.vertices[i];
             c += 1
-            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(vs[i]))
+            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(face.vertices[i]))
         }
-        for i in (edgeIndex + 1)..<vs.count {
-            vertices[c] = vs[i];
+        for i in (edgeIndex + 1)..<count {
+            vertices[c] = face.vertices[i];
             c += 1
-            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(vs[i]))
+            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(face.vertices[i]))
 
         }
 
