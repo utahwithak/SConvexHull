@@ -32,7 +32,7 @@
 import Foundation
 
 /// Representation of a convex hull.
-public class ConvexHull {
+public struct ConvexHull {
 
     internal init(points: [Vector3], faces: [ConvexFace]) {
         self.points = points
