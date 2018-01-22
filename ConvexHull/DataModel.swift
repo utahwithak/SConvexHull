@@ -46,80 +46,44 @@ internal struct DeferredFace {
 
 
 /// A helper class used to connect faces.
-internal final class FaceConnector {
+internal struct FaceConnector {
 
     /// The edge to be connected.
-    public var edgeIndex = 0
+    let edgeIndex: Int
 
     /// The face.
-    public var face: ConvexFaceInternal?;
-
+    let face: ConvexFaceInternal
 
     /// The hash code computed from indices.
-    public var hashCode: UInt64 = 0
+    let hashCode: UInt64
 
     /// The vertex indices.
-    public var vertices: [Int]
+    let v0: Int
+    let v1: Int
 
-    public init(dimension: Int) {
-        vertices = [Int](repeating: 0, count: dimension - 1)
-    }
-
-    /// Updates the connector.
-    public func update(face: ConvexFaceInternal, edgeIndex: Int) {
+    init(face: ConvexFaceInternal, edgeIndex: Int) {
         self.face = face;
         self.edgeIndex = edgeIndex;
 
-        var hashCode: UInt64 = 23;
-        let count = face.vertices.count
-        var c = 0;
-        for i in 0..<edgeIndex {
-            vertices[c] = face.vertices[i];
-            c += 1
-            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(face.vertices[i]))
-        }
-        for i in (edgeIndex + 1)..<count {
-            vertices[c] = face.vertices[i];
-            c += 1
-            hashCode = hashCode &+ (31 &* hashCode &+ UInt64(face.vertices[i]))
-
+        switch edgeIndex {
+        case 0:
+            v0 = face.vertices[1]
+            v1 = face.vertices[2]
+        case 1:
+            v0 = face.vertices[0]
+            v1 = face.vertices[2]
+        default:
+            v0 = face.vertices[0]
+            v1 = face.vertices[1]
         }
 
-        self.hashCode = hashCode;
+        var hashCode = UInt64(23)
+        hashCode = hashCode &+ (31 &* hashCode &+ UInt64(v0))
+        hashCode = hashCode &+ (31 &* hashCode &+ UInt64(v1))
+
+        self.hashCode = hashCode
     }
 
-
-    /// Can two faces be connected.
-    public static func areConnectable(a: FaceConnector, b: FaceConnector) -> Bool {
-        guard a.hashCode == b.hashCode else {
-            return false;
-        }
-
-
-        let av = a.vertices
-        let bv = b.vertices
-        guard av.count == bv.count else {
-            return false
-        }
-
-        for i in 0..<av.count {
-            if av[i] != bv[i] {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-
-    /// Connect two faces.
-    public static func connect(a: FaceConnector ,b: FaceConnector) {
-        guard let aFace = a.face, let bFace = b.face else {
-            fatalError("Missing faces!")
-        }
-        aFace.adjacentFaces[a.edgeIndex] = bFace.index;
-        bFace.adjacentFaces[b.edgeIndex] = aFace.index;
-    }
 }
 
 
@@ -128,7 +92,7 @@ internal final class FaceConnector {
 internal final class ConvexFaceInternal
 {
     /// Gets or sets the adjacent face data.
-    public var adjacentFaces: [Int]
+    public var adjacentFaces = [0,0,0]
 
     /// The furthest vertex.
     public var furthestVertex = 0
@@ -142,32 +106,29 @@ internal final class ConvexFaceInternal
     /// Is the normal flipped?
     public var isNormalFlipped = false
 
-    /// Next node in the list.
-    public var next: ConvexFaceInternal?
+//    /// Next node in the list.
+//    public var next: ConvexFaceInternal?
 
     /// Gets or sets the normal vector.
-    public var normal: [Double]
+    public var normal = Vector3.zero
 
     /// Face plane constant element.
     public var offset: Double = 0
 
-    /// Prev node in the list.
-    public weak var previous: ConvexFaceInternal?
+//    /// Prev node in the list.
+//    public weak var previous: ConvexFaceInternal?
 
     /// Used to traverse affected faces and create the Delaunay representation.
     public var tag = 0
 
     /// Gets or sets the vertices.
-    public var vertices: [Int]
+    public var vertices = [0,0,0]
 
     /// Gets or sets the vertices beyond.
     public var verticesBeyond = [Int]()
 
-    public init(dimension: Int, index: Int) {
+    public init(index: Int) {
         self.index = index
-        adjacentFaces = [Int](repeating: 0, count: dimension)
-        normal = [Double](repeating: 0, count: dimension)
-        vertices = [Int](repeating: 0, count: dimension)
     }
 
     func reset() {

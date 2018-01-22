@@ -8,40 +8,52 @@
 
 import Foundation
 
-public struct Vector3: Vertex {
-    public let position: [Double]
-    public var x: Double {
-        get {
-            return position[0]
-        }
-//        set {
-//            position[0] = newValue
-//        }
-    }
-    public var y: Double {
-        get {
-            return position[1]
-        }
-//        set {
-//            position[1] = newValue
-//        }
-    }
-    public var z: Double {
-        get {
-            return position[2]
-        }
-//        set {
-//            position[2] = newValue
-//        }
-    }
+public struct Vector3 {
+    public static let zero = Vector3(x: 0, y: 0, z: 0)
+    public var x: Double
+    public var y: Double
+    public var z: Double
 
     public init(x: Double, y: Double, z: Double) {
-        position = [x,y,z]
+        self.x = x
+        self.y = y
+        self.z = z
     }
+    
     public init(x: CGFloat, y: CGFloat, z: CGFloat) {
-        position = [Double(x),Double(y),Double(z)]
+        self.init(x: Double(x), y: Double(y),z: Double(z))
     }
-    public init(positions: [Double]) {
-        self.position = positions
+
+    public init(x: Int, y:Int, z: Int) {
+        self.init(x: Double(x), y: Double(y),z: Double(z))
     }
+
+}
+
+func *(lhs: Double, rhs: Vector3) -> Vector3 {
+    return Vector3(x: lhs * rhs.x, y: lhs * rhs.y, z: lhs * rhs.z)
+}
+
+func *(lhs: Vector3, rhs: Double) -> Vector3 {
+    return Vector3(x: lhs.x * rhs, y: lhs.y * rhs, z: lhs.z * rhs)
+}
+
+func *=(lhs: inout Vector3, rhs: Double) {
+    lhs.x *= rhs
+    lhs.y *= rhs
+    lhs.z *= rhs
+}
+
+func +=(lhs: inout Vector3, rhs: Vector3) {
+    lhs.x += rhs.x
+    lhs.y += rhs.y
+    lhs.z += rhs.z
+}
+
+func -(lhs: Vector3, rhs: Vector3) -> Vector3{
+    return Vector3(x: lhs.x - rhs.x, y: lhs.y - rhs.y, z: lhs.z - rhs.z)
+}
+
+func +(lhs: Vector3, rhs: Vector3) -> Vector3{
+    return Vector3(x: lhs.x + rhs.x, y: lhs.y + rhs.y, z: lhs.z + rhs.z)
 }

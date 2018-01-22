@@ -32,34 +32,11 @@
 import Foundation
 
 /// A convex face representation containing adjacency information.
-public protocol ConvexFace {
-    associatedtype TVertex: Vertex
+public struct ConvexFace {
 
-    init(verts: [TVertex], adjacency: [Self], normal: [Double])
-
-    /// Adjacency. Array of length "dimension".
-    /// If F = Adjacency[i] then the vertices shared with F are Vertices[j] where j != i.
-    /// In the context of triangulation, can be null (indicates the cell is at boundary).
-    var adjacency: [Self] { get set }
-
-    /// The vertices stored in clockwise order for dimensions 2 - 4, in higher dimensions the order is arbitrary.
-    /// Unless I accidentally switch some index somewhere in which case the order is CCW. Either way, it is consistent.
-    /// 3D Normal = (V[1] - V[0]) x (V[2] - V[1]).
-    var vertices: [TVertex] { get set }
+    public var vertices: [Vector3]
 
     /// The normal vector of the face. Null if used in triangulation.
-    var normal: [Double] { get set }
-}
-
-public final class DefaultConvexFace<T: Vertex>: ConvexFace {
-    public var adjacency = [DefaultConvexFace<T>]()
-    public var vertices = [T]()
-    public var normal = [Double]()
-    public init(){}
-    public init(verts: [TVertex], adjacency: [DefaultConvexFace<T>], normal: [Double]) {
-        self.vertices = verts
-        self.adjacency = adjacency
-        self.normal = normal
-    }
+    public var normal:Vector3
 }
 
