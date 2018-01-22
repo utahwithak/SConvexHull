@@ -44,7 +44,6 @@ internal struct DeferredFace {
     let pivotIndex: Int
 }
 
-
 /// A helper class used to connect faces.
 internal struct FaceConnector {
 
@@ -92,7 +91,20 @@ internal struct FaceConnector {
 internal final class ConvexFaceInternal
 {
     /// Gets or sets the adjacent face data.
-    public var adjacentFaces = [0,0,0]
+    public var adj0 = 0
+    public var adj1 = 0
+    public var adj2 = 0
+
+    func set(adj: Int, to: Int) {
+        switch adj {
+        case 0:
+            adj0 = to
+        case 1:
+            adj1 = to
+        default:
+            adj2 = to
+        }
+    }
 
     /// The furthest vertex.
     public var furthestVertex = 0
@@ -135,9 +147,9 @@ internal final class ConvexFaceInternal
     }
 
     func reset() {
-        for i in 0..<adjacentFaces.count {
-            adjacentFaces[i] = -1
-        }
+        adj0 = -1
+        adj1 = -1
+        adj2 = -1
     }
 
     subscript (index: Int) -> Int {

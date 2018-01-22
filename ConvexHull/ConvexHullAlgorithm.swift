@@ -485,23 +485,16 @@ internal class ConvexHullAlgorithm {
         vertexVisited[r.v1] = true
         vertexVisited[r.v2] = true
 
-        var i = 0
-        if !vertexVisited[l.v0] {
-            i = 0
-        } else if !vertexVisited[l.v1] {
-            i = 1
-        } else if !vertexVisited[l.v2] {
-            i = 2
+
+        if !vertexVisited[l.v0] && vertexVisited[l.v1] && vertexVisited[l.v2] {
+            l.adj0 = r.index
+        } else if !vertexVisited[l.v1] && vertexVisited[l.v0] && vertexVisited[l.v2] {
+            l.adj1 = r.index
+        } else if !vertexVisited[l.v2] && vertexVisited[l.v0] && vertexVisited[l.v1]  {
+            l.adj2 = r.index
         } else {
             return
         }
-
-        if (i == 0 && (!vertexVisited[l.v1] || !vertexVisited[l.v2])) || (i == 1 && !vertexVisited[l.v2]) {
-            return
-        }
-
-        // if we are here, the two faces share an edge
-        l.adjacentFaces[i] = r.index
 
         // update the adj. face on the other face - find the vertex that remains marked
         vertexVisited[l.v0] = false
@@ -509,11 +502,11 @@ internal class ConvexHullAlgorithm {
         vertexVisited[l.v2] = false
 
         if vertexVisited[r.v0] {
-            r.adjacentFaces[0] = l.index
+            r.adj0 = l.index
         } else if vertexVisited[r.v1] {
-            r.adjacentFaces[1] = l.index
+            r.adj1 = l.index
         } else if vertexVisited[r.v2] {
-            r.adjacentFaces[2] = l.index
+            r.adj2 = l.index
         }
 
     }
@@ -607,15 +600,25 @@ internal class ConvexHullAlgorithm {
         affectedFaceFlags[currentFace] = true
         while let toVisit = traverseStack.popLast() {
             let top = facePool[toVisit]
-            for i in 0..<3 {
-                let adjFace = top.adjacentFaces[i]
 
-                if !affectedFaceFlags[adjFace] && getVertexDistance(v: currentVertex, f: facePool[adjFace]) >= planeDistanceTolerance {
-                    affectedFaceBuffer.append(adjFace)
-                    affectedFaceFlags[adjFace] = true
-                    traverseStack.append(adjFace)
-                }
+            if !affectedFaceFlags[top.adj0] && getVertexDistance(v: currentVertex, f: facePool[top.adj0]) >= planeDistanceTolerance {
+                affectedFaceBuffer.append(top.adj0)
+                affectedFaceFlags[top.adj0] = true
+                traverseStack.append(top.adj0)
             }
+
+            if !affectedFaceFlags[top.adj1] && getVertexDistance(v: currentVertex, f: facePool[top.adj1]) >= planeDistanceTolerance {
+                affectedFaceBuffer.append(top.adj1)
+                affectedFaceFlags[top.adj1] = true
+                traverseStack.append(top.adj1)
+            }
+
+            if !affectedFaceFlags[top.adj2] && getVertexDistance(v: currentVertex, f: facePool[top.adj2]) >= planeDistanceTolerance {
+                affectedFaceBuffer.append(top.adj2)
+                affectedFaceFlags[top.adj2] = true
+                traverseStack.append(top.adj2)
+            }
+
         }
     }
 
@@ -626,8 +629,8 @@ internal class ConvexHullAlgorithm {
         let v1 = connector.v1
         if let index = connectors.index(where: { $0.hashCode == hash && v0 == $0.v0 && v1 == $0.v1 }) {
             let current = connectors.remove(at: index)
-            current.face.adjacentFaces[current.edgeIndex] = connector.face.index;
-            connector.face.adjacentFaces[connector.edgeIndex] = current.face.index;
+            current.face.set(adj: current.edgeIndex, to: connector.face.index)
+            connector.face.set(adj: connector.edgeIndex, to: current.face.index)
 
         } else {
             connectors.append(connector)
@@ -645,25 +648,39 @@ internal class ConvexHullAlgorithm {
 
             // Find the faces that need to be updated
             var updateCount = 0
-            for i in 0..<3 {
-                let af = oldFace.adjacentFaces[i]
-                if !affectedFaceFlags[af] {
-                    updateBuffer[updateCount] = af
-                    updateIndices[updateCount] = i
-                    updateCount += 1
-                }
+
+            if !affectedFaceFlags[oldFace.adj0] {
+                updateBuffer[updateCount] = oldFace.adj0
+                updateIndices[updateCount] = 0
+                updateCount += 1
             }
+
+            if !affectedFaceFlags[oldFace.adj1] {
+                updateBuffer[updateCount] = oldFace.adj1
+                updateIndices[updateCount] = 1
+                updateCount += 1
+            }
+
+            if !affectedFaceFlags[oldFace.adj2] {
+                updateBuffer[updateCount] = oldFace.adj2
+                updateIndices[updateCount] = 2
+                updateCount += 1
+            }
+
 
             for i in 0..<updateCount {
                 let adjacentFace = facePool[updateBuffer[i]]
 
-                var oldFaceAdjacentIndex = 0
-                let adjFaceAdjacency = adjacentFace.adjacentFaces
-                for j in 0..<adjFaceAdjacency.count {
-                    if (oldFaceIndex == adjFaceAdjacency[j]) {
-                        oldFaceAdjacentIndex = j
-                        break
-                    }
+                let oldFaceAdjacentIndex: Int
+
+                if oldFaceIndex == adjacentFace.adj0 {
+                    oldFaceAdjacentIndex = 0
+                } else if oldFaceIndex == adjacentFace.adj1 {
+                    oldFaceAdjacentIndex = 1
+                } else if oldFaceIndex == adjacentFace.adj2 {
+                    oldFaceAdjacentIndex = 2
+                } else {
+                    oldFaceAdjacentIndex = 0
                 }
 
                 let forbidden = updateIndices[i] // Index of the face that corresponds to this adjacent face
@@ -728,8 +745,8 @@ internal class ConvexHullAlgorithm {
 
             let orderedPivotIndex = face.faceIndex
 
-            newFace.adjacentFaces[orderedPivotIndex] = adjacentFace.index
-            adjacentFace.adjacentFaces[face.pivotIndex] = newFace.index
+            newFace.set(adj: orderedPivotIndex, to: adjacentFace.index)
+            adjacentFace.set(adj: face.pivotIndex, to: newFace.index)
 
             // let there be a connection.
             for j in 0..<3 {
