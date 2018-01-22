@@ -393,7 +393,7 @@ internal class ConvexHullAlgorithm {
         currentVertex = vertex2
         updateCenter()
         var edgeVectors = [Vector3](repeating: .zero, count:3)
-        edgeVectors[0] = vectorBetweenVertices(toIndex: vertex2, fromIndex: vertex1)
+        edgeVectors[0] = positions[vertex2] - positions[vertex1]
         // now the remaining vertices are just combined in one big list
         var extremes = boundingBoxPoints.flatMap({ $0})
         // otherwise find the remaining points by maximizing the initial simplex volume
@@ -408,7 +408,7 @@ internal class ConvexHullAlgorithm {
                 if initialPoints.contains(vIndex){
                     extremes.remove(at: i)
                 } else {
-                    edgeVectors[index] = vectorBetweenVertices(toIndex: vIndex, fromIndex: vertex1)
+                    edgeVectors[index] = positions[vIndex] - positions[vertex1]
                     let volume = getSimplexVolume(edgeVectors: edgeVectors, lastIndex: index, bigNumber: bigNumber)
                     if maxVolume < volume {
                         maxVolume = volume
@@ -445,7 +445,7 @@ internal class ConvexHullAlgorithm {
                     if initialPoints.contains(vIndex) {
                         allVertices.remove(at: i)
                     } else {
-                        edgeVectors[index] = vectorBetweenVertices(toIndex: vIndex, fromIndex: vertex1)
+                        edgeVectors[index] = positions[vIndex] - positions[vertex1]
                         let volume = getSimplexVolume(edgeVectors: edgeVectors, lastIndex: index, bigNumber: bigNumber)
                         if maxVolume < volume {
                             maxVolume = volume
@@ -525,7 +525,9 @@ internal class ConvexHullAlgorithm {
         maxDistance = -Double.greatestFiniteMagnitude
         furthestVertex = 0
         for i in 0..<numberOfVertices where !vertexVisited[i] {
-            isBeyond(face: face, beyondVertices: &face.verticesBeyond, v: i)
+            if isBeyond(face: face, v: i) {
+                face.verticesBeyond.append(i)
+            }
         }
 
         face.furthestVertex = furthestVertex
@@ -533,7 +535,7 @@ internal class ConvexHullAlgorithm {
 
 
     /// Check whether the vertex v is beyond the given face. If so, add it to beyondVertices.
-    private func isBeyond(face: ConvexFaceInternal, beyondVertices: inout [Int], v: Int) {
+    private func isBeyond(face: ConvexFaceInternal, v: Int) -> Bool {
         let distance = getVertexDistance(v: v, f: face)
         if distance >= planeDistanceTolerance {
             if distance > maxDistance {
@@ -548,8 +550,10 @@ internal class ConvexHullAlgorithm {
                     furthestVertex = v
                 }
             }
-            beyondVertices.append(v)
+            return true
         }
+        return false
+
     }
 
     /// Compares the values of two vertices. The return value (-1, 0 or +1) are found
@@ -619,16 +623,16 @@ internal class ConvexHullAlgorithm {
     /// Connect faces using a connector.
     private func connectFace(with connector: FaceConnector) {
         let hash = connector.hashCode
+        let v0 = connector.v0
+        let v1 = connector.v1
+        if let index = connectors.index(where: { $0.hashCode == hash && v0 == $0.v0 && v1 == $0.v1 }) {
+            let current = connectors.remove(at: index)
+            current.face.adjacentFaces[current.edgeIndex] = connector.face.index;
+            connector.face.adjacentFaces[connector.edgeIndex] = current.face.index;
 
-        for (index, current) in connectors.enumerated() where current.hashCode == hash {
-            if connector.hashCode == current.hashCode && connector.v0 == current.v0 && connector.v1 == current.v1 {
-                connectors.remove(at: index)
-                current.face.adjacentFaces[current.edgeIndex] = connector.face.index;
-                connector.face.adjacentFaces[connector.edgeIndex] = current.face.index;
-                return
-            }
+        } else {
+            connectors.append(connector)
         }
-        connectors.append(connector)
     }
 
     /// Removes the faces "covered" by the current vertex and adds the newly created ones.
@@ -739,7 +743,7 @@ internal class ConvexHullAlgorithm {
             }
 
             // the id adjacent face on the hull? If so, we can use simple method to find beyond vertices.
-            if adjacentFace.verticesBeyond.count == 0 {
+            if adjacentFace.verticesBeyond.isEmpty {
                 findBeyondVertices(face: newFace, beyond: oldFace.verticesBeyond)
             } else if (adjacentFace.verticesBeyond.count < oldFace.verticesBeyond.count) { // it is slightly more effective if the face with the lower number of beyond vertices comes first.
                 findBeyondVertices(face: newFace, beyond: adjacentFace.verticesBeyond, beyond1: oldFace.verticesBeyond)
@@ -761,8 +765,8 @@ internal class ConvexHullAlgorithm {
         }
 
         // Recycle the affected faces.
-        for fIndex in 0..<affectedFaceBuffer.count {
-            let faceIndex = affectedFaceBuffer[fIndex]
+        for faceIndex in affectedFaceBuffer {
+
             if let index = unprocessedFaces.index(where: { $0 === facePool[faceIndex]}) {
                 unprocessedFaces.remove(at: index)
             }
@@ -807,26 +811,23 @@ internal class ConvexHullAlgorithm {
     private func findBeyondVertices(face: ConvexFaceInternal, beyond: [Int] , beyond1: [Int] ) {
         maxDistance = Double.greatestFiniteMagnitude * -1
         furthestVertex = 0
-        var v = 0
 
-        for i in 0..<beyond1.count {
-            vertexVisited[beyond1[i]] = true
+        for v in beyond1 {
+            vertexVisited[v] = true
         }
 
         vertexVisited[currentVertex] = false
-        for i in 0..<beyond.count {
-            v = beyond[i]
-            if v == currentVertex{
-                continue
-            }
+        for v in beyond where v != currentVertex {
+
             vertexVisited[v] = false
-            isBeyond(face: face, beyondVertices: &beyondBuffer, v: v)
+            if isBeyond(face: face, v: v) {
+                beyondBuffer.append(v)
+            }
         }
 
-        for i in 0..<beyond1.count {
-            v = beyond1[i]
-            if vertexVisited[v] {
-                isBeyond(face: face, beyondVertices: &beyondBuffer, v: v)
+        for v in beyond1 where vertexVisited[v] {
+            if isBeyond(face: face, v: v) {
+                beyondBuffer.append(v)
             }
         }
 
@@ -835,7 +836,7 @@ internal class ConvexHullAlgorithm {
         // Pull the old switch a roo (switch the face beyond buffers)
         var temp = face.verticesBeyond
         face.verticesBeyond = beyondBuffer
-        if (temp.count > 0){
+        if !temp.isEmpty {
             temp.removeAll(keepingCapacity: true)
         }
         beyondBuffer = temp
@@ -846,14 +847,11 @@ internal class ConvexHullAlgorithm {
 
         maxDistance = -Double.greatestFiniteMagnitude
         furthestVertex = 0
-        var v = 0
 
-        for i in 0..<beyond.count {
-            v = beyond[i]
-            if v == currentVertex {
-                continue
+        for v in beyond where v != currentVertex {
+            if isBeyond(face: face, v: v) {
+                beyondBuffer.append(v)
             }
-            isBeyond(face: face, beyondVertices: &beyondBuffer, v: v)
         }
 
         face.furthestVertex = furthestVertex
@@ -981,13 +979,6 @@ internal class ConvexHullAlgorithm {
         return distance;
     }
 
-    /// Returns the vector the between vertices.
-    internal func vectorBetweenVertices( toIndex: Int, fromIndex: Int) -> Vector3 {
-
-        return positions[toIndex] - positions[fromIndex]
-
-    }
-
     var random = Xoroshiro(seed: (UInt64(arc4random()), UInt64(arc4random())))
 
     internal func randomOffsetToLift( index: Int, maxHeight: Double) {
@@ -998,8 +989,8 @@ internal class ConvexHullAlgorithm {
     /// Finds normal vector of a hyper-plane given by vertices.
     /// Stores the results to normalData.
     private func findNormalVector(vertices: [Int]) -> Vector3 {
-        let ntX = vectorBetweenVertices(toIndex: vertices[1], fromIndex: vertices[0]);
-        let ntY = vectorBetweenVertices(toIndex: vertices[2], fromIndex: vertices[1]);
+        let ntX = positions[vertices[1]] - positions[vertices[0]]
+        let ntY = positions[vertices[2]] - positions[vertices[1]]
 
         let nx = ntX.y * ntY.z - ntX.z * ntY.y
         let ny = ntX.z * ntY.x - ntX.x * ntY.z
