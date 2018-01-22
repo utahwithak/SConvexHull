@@ -67,14 +67,14 @@ internal struct FaceConnector {
 
         switch edgeIndex {
         case 0:
-            v0 = face.vertices[1]
-            v1 = face.vertices[2]
+            v0 = face.v1
+            v1 = face.v2
         case 1:
-            v0 = face.vertices[0]
-            v1 = face.vertices[2]
+            v0 = face.v0
+            v1 = face.v2
         default:
-            v0 = face.vertices[0]
-            v1 = face.vertices[1]
+            v0 = face.v0
+            v1 = face.v1
         }
 
         var hashCode = UInt64(23)
@@ -122,7 +122,10 @@ internal final class ConvexFaceInternal
     public var tag = 0
 
     /// Gets or sets the vertices.
-    public var vertices = [0,0,0]
+    public var v0 = 0
+    public var v1 = 0
+    public var v2 = 0
+
 
     /// Gets or sets the vertices beyond.
     public var verticesBeyond = [Int]()
@@ -134,6 +137,22 @@ internal final class ConvexFaceInternal
     func reset() {
         for i in 0..<adjacentFaces.count {
             adjacentFaces[i] = -1
+        }
+    }
+
+    subscript (index: Int) -> Int {
+        get {
+            return index == 0 ? v0 : (index == 1 ? v1 : v2)
+        }
+        set {
+            switch index {
+            case 0:
+                v0 = newValue
+            case 1:
+                v1 = newValue
+            default:
+                v2 = newValue
+            }
         }
     }
 }

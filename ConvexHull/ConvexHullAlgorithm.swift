@@ -341,8 +341,10 @@ internal class ConvexHullAlgorithm {
                 }
             }
             let newFace = getFace()
-
-            newFace.vertices = vertices.sorted()
+            vertices.sort()
+            newFace.v0 = vertices[0]
+            newFace.v1 = vertices[1]
+            newFace.v2 = vertices[2]
 
             _ = calculateFacePlane(face: newFace, center: center)
             faces[i] = newFace.index
@@ -474,49 +476,46 @@ internal class ConvexHullAlgorithm {
 
     /// Check if 2 faces are adjacent and if so, update their AdjacentFaces array.
     private func updateAdjacency(l: ConvexFaceInternal, r: ConvexFaceInternal) {
-        let lv = l.vertices
-        let rv = r.vertices
 
-        // reset marks on the 1st face
-        lv.forEach { vertexVisited[$0] = false}
+        vertexVisited[l.v0] = false
+        vertexVisited[l.v1] = false
+        vertexVisited[l.v2] = false
 
-        // mark all vertices on the 2nd face
-        rv.forEach({ vertexVisited[$0] = true })
+        vertexVisited[r.v0] = true
+        vertexVisited[r.v1] = true
+        vertexVisited[r.v2] = true
 
         var i = 0
-
-        // find the 1st false index
-        for k in 0..<lv.count {
-            if !vertexVisited[lv[k]] {
-                i = k
-                break
-            }
-        }
-        // no vertex was marked
-        if i == 3 {
+        if !vertexVisited[l.v0] {
+            i = 0
+        } else if !vertexVisited[l.v1] {
+            i = 1
+        } else if !vertexVisited[l.v2] {
+            i = 2
+        } else {
             return
         }
 
-
-        // check if only 1 vertex wasn't marked
-        for j in (i + 1)..<lv.count {
-            if !vertexVisited[lv[j]] {
-                return
-            }
+        if (i == 0 && (!vertexVisited[l.v1] || !vertexVisited[l.v2])) || (i == 1 && !vertexVisited[l.v2]) {
+            return
         }
 
         // if we are here, the two faces share an edge
         l.adjacentFaces[i] = r.index
 
         // update the adj. face on the other face - find the vertex that remains marked
-        lv.forEach { vertexVisited[$0] = false}
-        for k in 0..<rv.count {
-            if vertexVisited[rv[k]] {
-                i = k
-                break
-            }
+        vertexVisited[l.v0] = false
+        vertexVisited[l.v1] = false
+        vertexVisited[l.v2] = false
+
+        if vertexVisited[r.v0] {
+            r.adjacentFaces[0] = l.index
+        } else if vertexVisited[r.v1] {
+            r.adjacentFaces[1] = l.index
+        } else if vertexVisited[r.v2] {
+            r.adjacentFaces[2] = l.index
         }
-        r.adjacentFaces[i] = l.index
+
     }
 
 
@@ -672,11 +671,11 @@ internal class ConvexHullAlgorithm {
                 var oldVertexIndex = 0
 
                 let newFace = getFace()
-
-                for j in 0..<3 {
-                    newFace.vertices[j] = oldFace.vertices[j]
-                }
-                oldVertexIndex = newFace.vertices[forbidden]
+                newFace.v0 = oldFace.v0
+                newFace.v1 = oldFace.v1
+                newFace.v2 = oldFace.v2
+                
+                oldVertexIndex = newFace[forbidden]
 
                 var orderedPivotIndex = 0
 
@@ -684,8 +683,8 @@ internal class ConvexHullAlgorithm {
                 if currentVertexIndex < oldVertexIndex {
                     orderedPivotIndex = 0
                     for j in stride(from: forbidden - 1,through: 0, by: -1) {
-                        if newFace.vertices[j] > currentVertexIndex {
-                            newFace.vertices[j + 1] = newFace.vertices[j]
+                        if newFace[j] > currentVertexIndex {
+                            newFace[j + 1] = newFace[j]
                         } else {
                             orderedPivotIndex = j + 1
                             break
@@ -694,8 +693,8 @@ internal class ConvexHullAlgorithm {
                 } else {
                     orderedPivotIndex = 3 - 1
                     for j in (forbidden + 1)..<3 {
-                        if newFace.vertices[j] < currentVertexIndex {
-                            newFace.vertices[j - 1] = newFace.vertices[j]
+                        if newFace[j] < currentVertexIndex {
+                            newFace[j - 1] = newFace[j]
                         } else {
                             orderedPivotIndex = j - 1
                             break
@@ -703,7 +702,7 @@ internal class ConvexHullAlgorithm {
                     }
                 }
 
-                newFace.vertices[orderedPivotIndex] = currentVertex
+                newFace[orderedPivotIndex] = currentVertex
 
                 if !calculateFacePlane(face: newFace, center: center) {
                     return false
@@ -875,13 +874,10 @@ internal class ConvexHullAlgorithm {
         }
 
         for i in 0..<cellCount {
-            let vs = facePool[convexFaces[i]].vertices
-            for j in 0..<vs.count {
-                let v = vs[j]
-                if !vertexVisited[v] {
-                    vertexVisited[v] = true
-                }
-            }
+            let face = facePool[convexFaces[i]]
+            vertexVisited[face.v0] = true
+            vertexVisited[face.v1] = true
+            vertexVisited[face.v2] = true
         }
 
         var result = [Vector3]()
@@ -902,11 +898,7 @@ internal class ConvexHullAlgorithm {
 
         for i in 0..<cellCount {
             let face = facePool[faces[i]]
-            var vertices = [Vector3]()
-            for j in 0..<3 {
-                vertices.append(self.vertices[face.vertices[j]])
-            }
-            let conFace = ConvexFace(vertices: vertices, normal: face.normal)
+            let conFace = ConvexFace(vertices: [self.vertices[face.v0], self.vertices[face.v1], self.vertices[face.v2]], normal: face.normal)
             cells.append(conFace)
             face.tag = i
         }
@@ -931,9 +923,8 @@ internal class ConvexHullAlgorithm {
 
     /// Calculates the normal and offset of the hyper-plane given by the face's vertices.
     internal func calculateFacePlane(face: ConvexFaceInternal, center: Vector3) -> Bool {
-        var vertices = face.vertices;
 
-        face.normal = findNormalVector(vertices: vertices);
+        face.normal = findNormalVector(a: face.v0, b: face.v1, c: face.v2)
 
         if face.normal.x.isNaN {
             return false
@@ -941,7 +932,7 @@ internal class ConvexHullAlgorithm {
 
         var offset = 0.0;
         var centerDistance = 0.0;
-        let fi = vertices[0]
+        let fi = face.v0
         let faceNorm = face.normal
         offset += faceNorm.x * positions[fi].x
         centerDistance += faceNorm.x * center.x
@@ -988,9 +979,9 @@ internal class ConvexHullAlgorithm {
 
     /// Finds normal vector of a hyper-plane given by vertices.
     /// Stores the results to normalData.
-    private func findNormalVector(vertices: [Int]) -> Vector3 {
-        let ntX = positions[vertices[1]] - positions[vertices[0]]
-        let ntY = positions[vertices[2]] - positions[vertices[1]]
+    private func findNormalVector(a: Int, b: Int, c: Int) -> Vector3 {
+        let ntX = positions[b] - positions[a]
+        let ntY = positions[c] - positions[b]
 
         let nx = ntX.y * ntY.z - ntX.z * ntY.y
         let ny = ntX.z * ntY.x - ntX.x * ntY.z
