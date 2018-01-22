@@ -110,11 +110,6 @@ internal class ConvexHullAlgorithm {
     /// Used for VerticesBeyond for faces that are on the convex hull.
     private let emptyBuffer = [Int]()
 
-
-    /// Used to determine which vertices are "above" (or "beyond") a face
-    private var beyondBuffer = [Int]()
-
-
     /// Stores faces that are visible from the current vertex.
     private var affectedFaceBuffer = [Int]()
 
@@ -362,7 +357,7 @@ internal class ConvexHullAlgorithm {
         for faceIndex in faces  {
             let face = facePool[faceIndex]
             findBeyondVertices(of: face)
-            if face.verticesBeyond.count == 0 {
+            if face.verticesBeyond.isEmpty {
                 convexFaces.append(face.index) // The face is on the hull
             } else {
                 unprocessedFaces.append(face)
@@ -629,8 +624,22 @@ internal class ConvexHullAlgorithm {
         let v1 = connector.v1
         if let index = connectors.index(where: { $0.hashCode == hash && v0 == $0.v0 && v1 == $0.v1 }) {
             let current = connectors.remove(at: index)
-            current.face.set(adj: current.edgeIndex, to: connector.face.index)
-            connector.face.set(adj: connector.edgeIndex, to: current.face.index)
+
+            if current.edgeIndex == 0 {
+                current.face.adj0 = connector.face.index
+            } else if current.edgeIndex == 1 {
+                current.face.adj1 = connector.face.index
+            } else {
+                current.face.adj2 = connector.face.index
+            }
+
+            if connector.edgeIndex == 0 {
+                connector.face.adj0 = current.face.index
+            } else if connector.edgeIndex == 1 {
+                connector.face.adj1 = current.face.index
+            } else {
+                connector.face.adj2 = current.face.index
+            }
 
         } else {
             connectors.append(connector)
@@ -685,14 +694,20 @@ internal class ConvexHullAlgorithm {
 
                 let forbidden = updateIndices[i] // Index of the face that corresponds to this adjacent face
 
-                var oldVertexIndex = 0
 
                 let newFace = getFace()
                 newFace.vert0 = oldFace.vert0
                 newFace.vert1 = oldFace.vert1
                 newFace.vert2 = oldFace.vert2
-                
-                oldVertexIndex = newFace[forbidden]
+
+                let oldVertexIndex: Int
+                if forbidden == 0 {
+                    oldVertexIndex = newFace.vert0
+                } else if forbidden == 1 {
+                    oldVertexIndex = newFace.vert1
+                } else {
+                    oldVertexIndex = newFace.vert2
+                }
 
                 var orderedPivotIndex = 0
 
@@ -718,8 +733,13 @@ internal class ConvexHullAlgorithm {
                         }
                     }
                 }
-
-                newFace[orderedPivotIndex] = currentVertex
+                if orderedPivotIndex == 0 {
+                    newFace.vert0 = currentVertex
+                } else if orderedPivotIndex == 1 {
+                    newFace.vert1 = currentVertex
+                } else {
+                    newFace.vert2 = currentVertex
+                }
 
                 if !calculateFacePlane(face: newFace, center: center) {
                     return false
@@ -749,13 +769,15 @@ internal class ConvexHullAlgorithm {
             adjacentFace.set(adj: face.pivotIndex, to: newFace.index)
 
             // let there be a connection.
-            for j in 0..<3 {
-                if (j == orderedPivotIndex) {
-                    continue
-                }
-
-                let connector = FaceConnector(face: newFace, edgeIndex: j)
-                connectFace(with: connector)
+            if orderedPivotIndex == 0 {
+                connectFace(with: FaceConnector(face: newFace, edgeIndex: 1))
+                connectFace(with: FaceConnector(face: newFace, edgeIndex: 2))
+            } else if orderedPivotIndex == 1 {
+                connectFace(with: FaceConnector(face: newFace, edgeIndex: 0))
+                connectFace(with: FaceConnector(face: newFace, edgeIndex: 2))
+            } else {
+                connectFace(with: FaceConnector(face: newFace, edgeIndex: 0))
+                connectFace(with: FaceConnector(face: newFace, edgeIndex: 1))
             }
 
             // the id adjacent face on the hull? If so, we can use simple method to find beyond vertices.
@@ -828,6 +850,9 @@ internal class ConvexHullAlgorithm {
         maxDistance = Double.greatestFiniteMagnitude * -1
         furthestVertex = 0
 
+        if !face.verticesBeyond.isEmpty {
+            face.verticesBeyond.removeAll(keepingCapacity: true)
+        }
         for v in beyond1 {
             vertexVisited[v] = true
         }
@@ -837,48 +862,32 @@ internal class ConvexHullAlgorithm {
 
             vertexVisited[v] = false
             if isBeyond(face: face, v: v) {
-                beyondBuffer.append(v)
+                face.verticesBeyond.append(v)
             }
         }
 
-        for v in beyond1 where vertexVisited[v] {
-            if isBeyond(face: face, v: v) {
-                beyondBuffer.append(v)
-            }
+        for v in beyond1 where vertexVisited[v] && isBeyond(face: face, v: v) {
+            face.verticesBeyond.append(v)
         }
 
         face.furthestVertex = furthestVertex
-
-        // Pull the old switch a roo (switch the face beyond buffers)
-        var temp = face.verticesBeyond
-        face.verticesBeyond = beyondBuffer
-        if !temp.isEmpty {
-            temp.removeAll(keepingCapacity: true)
-        }
-        beyondBuffer = temp
     }
 
     /// Finds the beyond vertices.
-    private func findBeyondVertices(face: ConvexFaceInternal , beyond: [Int]){
+    private func findBeyondVertices(face: ConvexFaceInternal , beyond: [Int]) {
+        if !face.verticesBeyond.isEmpty {
+            face.verticesBeyond.removeAll(keepingCapacity: true)
+        }
 
         maxDistance = -Double.greatestFiniteMagnitude
         furthestVertex = 0
 
-        for v in beyond where v != currentVertex {
-            if isBeyond(face: face, v: v) {
-                beyondBuffer.append(v)
-            }
+        for v in beyond where v != currentVertex && isBeyond(face: face, v: v) {
+            face.verticesBeyond.append(v)
         }
 
         face.furthestVertex = furthestVertex
 
-        // Pull the old switch a roo (switch the face beyond buffers)
-        var temp = face.verticesBeyond
-        face.verticesBeyond = beyondBuffer
-        if temp.count > 0 {
-            temp.removeAll(keepingCapacity: true)
-        }
-        beyondBuffer = temp
     }
 
 

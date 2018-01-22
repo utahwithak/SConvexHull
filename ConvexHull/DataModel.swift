@@ -112,23 +112,14 @@ internal final class ConvexFaceInternal
     /// Index of the face inside the pool.
     public var index = 0
 
-    /// Is it present in the list.
-    public var isInList = false
-
     /// Is the normal flipped?
     public var isNormalFlipped = false
-
-//    /// Next node in the list.
-//    public var next: ConvexFaceInternal?
 
     /// Gets or sets the normal vector.
     public var normal = Vector3.zero
 
     /// Face plane constant element.
     public var offset: Double = 0
-
-//    /// Prev node in the list.
-//    public weak var previous: ConvexFaceInternal?
 
     /// Used to traverse affected faces and create the Delaunay representation.
     public var tag = 0
@@ -137,7 +128,6 @@ internal final class ConvexFaceInternal
     public var vert0 = 0
     public var vert1 = 0
     public var vert2 = 0
-
 
     /// Gets or sets the vertices beyond.
     public var verticesBeyond = [Int]()
