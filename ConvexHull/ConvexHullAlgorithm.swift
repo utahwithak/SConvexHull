@@ -66,7 +66,7 @@ internal class ConvexHullAlgorithm {
     private var facePool = [ConvexFaceInternal]()
 
     /// The affected face flags
-    internal var affectedFaceFlags: [Bool]
+    internal var affectedFaceFlags =  [Bool]()
 
     /// Used to track the size of the current hull in the Update/RollbackCenter functions.
     private var convexHullSize = 0
@@ -165,6 +165,7 @@ internal class ConvexHullAlgorithm {
         let index = facePool.count
         let face = ConvexFaceInternal(index: index)
         facePool.append(face)
+        affectedFaceFlags.append(false)
         return face
     }
 
@@ -188,7 +189,6 @@ internal class ConvexHullAlgorithm {
         boundingBoxPoints = [[Int]](repeating: [], count: 3)
         vertexVisited = [Bool](repeating: false, count: vertices.count)
         positions = vertices
-        affectedFaceFlags = [Bool](repeating: false, count: (3 + 1) * 10)
         updateBuffer = [Int](repeating: 0, count: 3)
         updateIndices = [Int](repeating: 0, count: 3)
 

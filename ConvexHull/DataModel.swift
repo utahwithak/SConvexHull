@@ -110,7 +110,7 @@ internal final class ConvexFaceInternal
     public var furthestVertex = 0
 
     /// Index of the face inside the pool.
-    public var index = 0
+    public let index: Int
 
     /// Is the normal flipped?
     public var isNormalFlipped = false
