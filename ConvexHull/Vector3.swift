@@ -7,6 +7,9 @@
 //
 
 import Foundation
+#if os(iOS)
+import QuartzCore
+#endif
 
 public struct Vector3 {
     public static let zero = Vector3(x: 0, y: 0, z: 0)
@@ -19,8 +22,13 @@ public struct Vector3 {
         self.y = y
         self.z = z
     }
-    
-    public init(x: CGFloat, y: CGFloat, z: CGFloat) {
+    public init(_ x: Double,_ y: Double, _ z: Double) {
+        self.x = x
+        self.y = y
+        self.z = z
+    }
+
+    public init(x: Float, y: Float, z: Float) {
         self.init(x: Double(x), y: Double(y),z: Double(z))
     }
 
@@ -28,32 +36,39 @@ public struct Vector3 {
         self.init(x: Double(x), y: Double(y),z: Double(z))
     }
 
+    public var magnitude: Double {
+        return sqrt((x * x) + (y * y) + (z * z))
+    }
+
 }
 
-func *(lhs: Double, rhs: Vector3) -> Vector3 {
+public func *(lhs: Double, rhs: Vector3) -> Vector3 {
     return Vector3(x: lhs * rhs.x, y: lhs * rhs.y, z: lhs * rhs.z)
 }
 
-func *(lhs: Vector3, rhs: Double) -> Vector3 {
+public func *(lhs: Vector3, rhs: Double) -> Vector3 {
     return Vector3(x: lhs.x * rhs, y: lhs.y * rhs, z: lhs.z * rhs)
 }
+public func /(lhs: Vector3, rhs: Double) -> Vector3 {
+    return Vector3(x: lhs.x / rhs, y: lhs.y / rhs, z: lhs.z / rhs)
+}
 
-func *=(lhs: inout Vector3, rhs: Double) {
+public func *=(lhs: inout Vector3, rhs: Double) {
     lhs.x *= rhs
     lhs.y *= rhs
     lhs.z *= rhs
 }
 
-func +=(lhs: inout Vector3, rhs: Vector3) {
+public func +=(lhs: inout Vector3, rhs: Vector3) {
     lhs.x += rhs.x
     lhs.y += rhs.y
     lhs.z += rhs.z
 }
 
-func -(lhs: Vector3, rhs: Vector3) -> Vector3{
+public func -(lhs: Vector3, rhs: Vector3) -> Vector3{
     return Vector3(x: lhs.x - rhs.x, y: lhs.y - rhs.y, z: lhs.z - rhs.z)
 }
 
-func +(lhs: Vector3, rhs: Vector3) -> Vector3{
+public func +(lhs: Vector3, rhs: Vector3) -> Vector3{
     return Vector3(x: lhs.x + rhs.x, y: lhs.y + rhs.y, z: lhs.z + rhs.z)
 }

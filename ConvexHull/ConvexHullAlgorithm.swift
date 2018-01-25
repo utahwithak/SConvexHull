@@ -398,7 +398,7 @@ internal class ConvexHullAlgorithm {
         while index < 3 && !extremes.isEmpty {
             var bestVertex = -1
             var bestEdgeVector = Vector3.zero
-            var maxVolume = Constants.defaultPlaneDistanceTolerance
+            var maxVolume = ConvexHull.defaultPlaneDistanceTolerance
             for i in stride(from: extremes.count - 1, through: 0, by: -1) {
                 // count backwards in order to remove potential duplicates
                 let vIndex = extremes[i]

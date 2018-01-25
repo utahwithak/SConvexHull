@@ -88,8 +88,7 @@ internal struct FaceConnector {
 
 /// This internal class manages the faces of the convex hull. It is a
 /// separate class from the desired user class.
-internal final class ConvexFaceInternal
-{
+internal final class ConvexFaceInternal {
     /// Gets or sets the adjacent face data.
     public var adj0 = 0
     public var adj1 = 0
