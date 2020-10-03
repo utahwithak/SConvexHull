@@ -6,17 +6,16 @@
 //  Copyright © 2018 Datum Apps. All rights reserved.
 //
 
+
 import Foundation
-#if os(iOS)
-import QuartzCore
-#endif
 
 public struct Vector3 {
     public static let zero = Vector3(x: 0, y: 0, z: 0)
+    
     public var x: Double
     public var y: Double
     public var z: Double
-
+    
     public init(x: Double, y: Double, z: Double) {
         self.x = x
         self.y = y
@@ -27,19 +26,19 @@ public struct Vector3 {
         self.y = y
         self.z = z
     }
-
+    
     public init(x: Float, y: Float, z: Float) {
         self.init(x: Double(x), y: Double(y),z: Double(z))
     }
-
+    
     public init(x: Int, y:Int, z: Int) {
         self.init(x: Double(x), y: Double(y),z: Double(z))
     }
-
+    
     public var magnitude: Double {
         return sqrt((x * x) + (y * y) + (z * z))
     }
-
+    
 }
 
 public func *(lhs: Double, rhs: Vector3) -> Vector3 {

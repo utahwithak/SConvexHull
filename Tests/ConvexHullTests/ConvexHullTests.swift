@@ -22,21 +22,23 @@ class ConvexHullTests: XCTestCase {
     }
     
     func testExample() {
-
-        let verts = [[0.0,0.0,0.0],
-                      [1.0,1.0,1.0],
-                      [0.0,1.0,1.0],
-                      [0.0,0.0,1.0],
-                      [1.0,0.0,1.0],
-                      [0.0,1.0,0.0],
-                      [1.0,0.0,0.0],
-                      [1.0,1.0,0.0]]
-        var hull: ConvexHull? = ConvexHull<DefaultVertex, DefaultConvexFace<DefaultVertex>>.create(raw: verts)
+        
+        let verts = [Vector3(0.0,0.0,0.0),
+                     Vector3(1.0,1.0,1.0),
+                     Vector3(0.0,1.0,1.0),
+                     Vector3(0.0,0.0,1.0),
+                     Vector3(1.0,0.0,1.0),
+                     Vector3(0.0,1.0,0.0),
+                     Vector3(1.0,0.0,0.0),
+                     Vector3(1.0,1.0,0.0)]
+        var hull: ConvexHull? = ConvexHull.create(with: verts)
+        
         XCTAssert(hull!.faces.count == 12)
-
+        
         hull = nil
-        print("Leak?")
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        
+        // Expected that memory doesn't leak
+        XCTAssertNotNil(hull)
     }
     
     func testPerformanceExample() {

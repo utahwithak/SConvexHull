@@ -20,7 +20,6 @@
 import Foundation
 
 public protocol RandomGenerator {
-//    init()
 
     /// Initializes the provided buffer with randomness
     mutating func randomize(buffer: UnsafeMutableRawPointer, size: Int)

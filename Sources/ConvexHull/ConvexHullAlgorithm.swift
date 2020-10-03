@@ -31,7 +31,7 @@
 
 import Foundation
 
-internal class ConvexHullAlgorithm {
+class ConvexHullAlgorithm {
 
     /// Explained in ConvexHullComputationConfig.
     private let planeDistanceTolerance: Double
@@ -183,7 +183,7 @@ internal class ConvexHullAlgorithm {
         return ConvexHull(points: ch.hullVertices(data: data), faces: ch.getConvexFaces())
     }
 
-    private init( vertices: [Vector3], planeDistanceTolerance: Double) {
+    private init(vertices: [Vector3], planeDistanceTolerance: Double) {
         self.vertices = vertices
         numberOfVertices = vertices.count
         boundingBoxPoints = [[Int]](repeating: [], count: 3)
@@ -322,7 +322,7 @@ internal class ConvexHullAlgorithm {
     /// vertices are checked in the main loop, but: 1) a degenerate simplex would not eliminate any other
     /// vertices (thus no savings there), 2) the creation of the face normal is prone to error.
     private func createInitialSimplex() {
-        var initialPoints = findInitialPoints()
+        let initialPoints = findInitialPoints()
         //create the first faces from (dimension + 1) vertices.
         var faces = [Int](repeating:0, count: 3 + 1)
 
@@ -414,7 +414,7 @@ internal class ConvexHullAlgorithm {
                     }
                 }
             }
-            if let index = extremes.index(of: bestVertex) {
+            if let index = extremes.firstIndex(of: bestVertex) {
                 extremes.remove(at: index)
             }
             if bestVertex == -1 {
@@ -451,7 +451,7 @@ internal class ConvexHullAlgorithm {
                         }
                     }
                 }
-                if let index = allVertices.index(of: bestVertex) {
+                if let index = allVertices.firstIndex(of: bestVertex) {
                     allVertices.remove(at: index)
                 }
                 if (bestVertex == -1) {
@@ -622,7 +622,7 @@ internal class ConvexHullAlgorithm {
         let hash = connector.hashCode
         let v0 = connector.v0
         let v1 = connector.v1
-        if let index = connectors.index(where: { $0.hashCode == hash && v0 == $0.v0 && v1 == $0.v1 }) {
+        if let index = connectors.firstIndex(where: { $0.hashCode == hash && v0 == $0.v0 && v1 == $0.v1 }) {
             let current = connectors.remove(at: index)
 
             if current.edgeIndex == 0 {
@@ -792,7 +792,7 @@ internal class ConvexHullAlgorithm {
             // This face will definitely lie on the hull
             if newFace.verticesBeyond.isEmpty {
                 convexFaces.append(newFace.index)
-                if let index = unprocessedFaces.index(where: { $0 === newFace }) {
+                if let index = unprocessedFaces.firstIndex(where: { $0 === newFace }) {
                     unprocessedFaces.remove(at: index)
                 }
                 newFace.verticesBeyond.removeAll(keepingCapacity: true)
@@ -805,7 +805,7 @@ internal class ConvexHullAlgorithm {
         // Recycle the affected faces.
         for faceIndex in affectedFaceBuffer {
 
-            if let index = unprocessedFaces.index(where: { $0 === facePool[faceIndex]}) {
+            if let index = unprocessedFaces.firstIndex(where: { $0 === facePool[faceIndex]}) {
                 unprocessedFaces.remove(at: index)
             }
             depositFace(at: faceIndex)
@@ -826,7 +826,7 @@ internal class ConvexHullAlgorithm {
             }
 
             convexFaces.append(face.index)
-            if let index = unprocessedFaces.index(where: { $0 === face} ) {
+            if let index = unprocessedFaces.firstIndex(where: { $0 === face} ) {
                 unprocessedFaces.remove(at: index)
             }
             face.verticesBeyond.removeAll(keepingCapacity: true)
@@ -948,7 +948,7 @@ internal class ConvexHullAlgorithm {
     }
 
     /// Calculates the normal and offset of the hyper-plane given by the face's vertices.
-    internal func calculateFacePlane(face: ConvexFaceInternal, center: Vector3) -> Bool {
+    func calculateFacePlane(face: ConvexFaceInternal, center: Vector3) -> Bool {
 
         face.normal = findNormalVector(a: face.vert0, b: face.vert1, c: face.vert2)
 
@@ -984,7 +984,7 @@ internal class ConvexHullAlgorithm {
 
     /// Check if the vertex is "visible" from the face.
     /// The vertex is "over face" if the return value is > Constants.PlaneDistanceTolerance.
-    internal func getVertexDistance(v: Int, f: ConvexFaceInternal) -> Double {
+    func getVertexDistance(v: Int, f: ConvexFaceInternal) -> Double {
         let normal = f.normal
 
         var distance = f.offset;
