@@ -37,6 +37,6 @@ public struct ConvexFace {
     public var vertices: [Vector3]
 
     /// The normal vector of the face. Null if used in triangulation.
-    public var normal:Vector3
+    public var normal: Vector3
 }
 

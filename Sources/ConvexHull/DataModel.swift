@@ -31,7 +31,7 @@
 
 import Foundation
 
-internal struct DeferredFace {
+struct DeferredFace {
 
     /// The faces.
     let face: ConvexFaceInternal
@@ -45,7 +45,7 @@ internal struct DeferredFace {
 }
 
 /// A helper class used to connect faces.
-internal struct FaceConnector {
+struct FaceConnector {
 
     /// The edge to be connected.
     let edgeIndex: Int
@@ -88,11 +88,11 @@ internal struct FaceConnector {
 
 /// This internal class manages the faces of the convex hull. It is a
 /// separate class from the desired user class.
-internal final class ConvexFaceInternal {
+final class ConvexFaceInternal {
     /// Gets or sets the adjacent face data.
-    public var adj0 = 0
-    public var adj1 = 0
-    public var adj2 = 0
+    var adj0 = 0
+    var adj1 = 0
+    var adj2 = 0
 
     func set(adj: Int, to: Int) {
         switch adj {
@@ -106,32 +106,32 @@ internal final class ConvexFaceInternal {
     }
 
     /// The furthest vertex.
-    public var furthestVertex = 0
+    var furthestVertex = 0
 
     /// Index of the face inside the pool.
-    public let index: Int
+    let index: Int
 
     /// Is the normal flipped?
-    public var isNormalFlipped = false
+    var isNormalFlipped = false
 
     /// Gets or sets the normal vector.
-    public var normal = Vector3.zero
+    var normal = Vector3.zero
 
     /// Face plane constant element.
-    public var offset: Double = 0
+    var offset: Double = 0
 
     /// Used to traverse affected faces and create the Delaunay representation.
-    public var tag = 0
+    var tag = 0
 
     /// Gets or sets the vertices.
-    public var vert0 = 0
-    public var vert1 = 0
-    public var vert2 = 0
+    var vert0 = 0
+    var vert1 = 0
+    var vert2 = 0
 
     /// Gets or sets the vertices beyond.
-    public var verticesBeyond = [Int]()
+    var verticesBeyond = [Int]()
 
-    public init(index: Int) {
+    init(index: Int) {
         self.index = index
     }
 

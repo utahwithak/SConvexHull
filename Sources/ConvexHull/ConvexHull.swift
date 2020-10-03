@@ -35,6 +35,7 @@ import Foundation
 public struct ConvexHull {
     /// The default plane distance tolerance
     public static let defaultPlaneDistanceTolerance: Double = 1e-10
+    
     internal init(points: [Vector3], faces: [ConvexFace]) {
         self.points = points
         self.faces = faces
@@ -47,7 +48,7 @@ public struct ConvexHull {
     public let faces: [ConvexFace]
 
     /// Creates the convex hull
-    public static func create(with data: [Vector3], planeDistanceTolerance tolerance: Double = ConvexHull.defaultPlaneDistanceTolerance) -> ConvexHull{
+    public static func create(with data: [Vector3], planeDistanceTolerance tolerance: Double = ConvexHull.defaultPlaneDistanceTolerance) -> ConvexHull {
         return ConvexHullAlgorithm.getConvexHull(with: data, planeDistanceTolerance: tolerance)
     }
 
